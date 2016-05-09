@@ -1,0 +1,43 @@
+# system info DE0_Nano_SOPC on 2016.04.02.17:51:23
+system_info:
+name,value
+DEVICE,5CSEMA4U23C6
+DEVICE_FAMILY,Cyclone V
+GENERATION_ID,1459633877
+#
+#
+# Files generated for DE0_Nano_SOPC on 2016.04.02.17:51:23
+files:
+filepath,kind,attributes,module,is_top
+simulation/DE0_Nano_SOPC.v,VERILOG,,DE0_Nano_SOPC,true
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+DE0_Nano_SOPC.RS232_0,Altera_UP_Avalon_RS232
+DE0_Nano_SOPC.adc_controller_0,DE0_Nano_SOPC_adc_controller_0
+DE0_Nano_SOPC.clock_crossing_io,altera_avalon_mm_clock_crossing_bridge
+DE0_Nano_SOPC.controller_interrupt_counter,DE0_Nano_SOPC_controller_interrupt_counter
+DE0_Nano_SOPC.jtag_uart,DE0_Nano_SOPC_jtag_uart
+DE0_Nano_SOPC.key,DE0_Nano_SOPC_key
+DE0_Nano_SOPC.led,DE0_Nano_SOPC_led
+DE0_Nano_SOPC.motor_controller_0,DE0_Nano_SOPC_motor_controller_0
+DE0_Nano_SOPC.nios2_gen2_0,DE0_Nano_SOPC_nios2_gen2_0
+DE0_Nano_SOPC.onchip_memory2_0,DE0_Nano_SOPC_onchip_memory2_0
+DE0_Nano_SOPC.pll_0,DE0_Nano_SOPC_pll_0
+DE0_Nano_SOPC.power_management_slave_0,DE0_Nano_SOPC_power_management_slave_0
+DE0_Nano_SOPC.sw,DE0_Nano_SOPC_sw
+DE0_Nano_SOPC.sysid,DE0_Nano_SOPC_sysid
+DE0_Nano_SOPC.mm_interconnect_0,DE0_Nano_SOPC_mm_interconnect_0
+DE0_Nano_SOPC.mm_interconnect_1,DE0_Nano_SOPC_mm_interconnect_1
+DE0_Nano_SOPC.irq_mapper,DE0_Nano_SOPC_irq_mapper
+DE0_Nano_SOPC.irq_synchronizer,altera_irq_clock_crosser
+DE0_Nano_SOPC.irq_synchronizer_001,altera_irq_clock_crosser
+DE0_Nano_SOPC.irq_synchronizer_002,altera_irq_clock_crosser
+DE0_Nano_SOPC.irq_synchronizer_003,altera_irq_clock_crosser
+DE0_Nano_SOPC.irq_synchronizer_004,altera_irq_clock_crosser
+DE0_Nano_SOPC.rst_controller,altera_reset_controller
+DE0_Nano_SOPC.rst_controller_001,altera_reset_controller
+DE0_Nano_SOPC.rst_controller_002,altera_reset_controller
+DE0_Nano_SOPC.rst_controller_003,altera_reset_controller
+DE0_Nano_SOPC.rst_controller_004,altera_reset_controller
