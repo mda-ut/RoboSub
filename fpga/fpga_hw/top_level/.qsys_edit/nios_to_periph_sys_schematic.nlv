@@ -1,0 +1,35 @@
+# # File gsaved with Nlview version 6.3.8  2013-12-19 bk=1.2992 VDI=34 GEI=35
+# 
+preplace inst nios_to_periph_sys.nios2_gen2 -pg 1 -lvl 3 -y 340
+preplace inst nios_to_periph_sys.sw -pg 1 -lvl 5 -y 590
+preplace inst nios_to_periph_sys.onchip_memory2 -pg 1 -lvl 5 -y 150
+preplace inst nios_to_periph_sys.nios2_gen2.cpu -pg 1
+preplace inst nios_to_periph_sys.jtag_uart -pg 1 -lvl 5 -y 240
+preplace inst nios_to_periph_sys.nios_timer -pg 1 -lvl 5 -y 480
+preplace inst nios_to_periph_sys.RS232_0 -pg 1 -lvl 4 -y 300
+preplace inst nios_to_periph_sys -pg 1 -lvl 1 -y 40 -regy -20
+preplace inst nios_to_periph_sys.sysid -pg 1 -lvl 5 -y 720
+preplace inst nios_to_periph_sys.nios2_gen2.clock_bridge -pg 1
+preplace inst nios_to_periph_sys.clk_50 -pg 1 -lvl 1 -y 350
+preplace inst nios_to_periph_sys.mda_motor_control -pg 1 -lvl 4 -y 490
+preplace inst nios_to_periph_sys.led -pg 1 -lvl 5 -y 810
+preplace inst nios_to_periph_sys.pll -pg 1 -lvl 2 -y 250
+preplace inst nios_to_periph_sys.mda_adc -pg 1 -lvl 4 -y 30
+preplace inst nios_to_periph_sys.nios2_gen2.reset_bridge -pg 1
+preplace inst nios_to_periph_sys.key -pg 1 -lvl 5 -y 350
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)nios_to_periph_sys.clk_50,(SLAVE)clk_50.clk_in) 1 0 1 NJ
+preplace netloc FAN_OUT<net_container>nios_to_periph_sys</net_container>(SLAVE)jtag_uart.irq,(SLAVE)sw.irq,(SLAVE)RS232_0.interrupt_sender,(MASTER)nios2_gen2.irq,(SLAVE)nios_timer.irq,(SLAVE)key.irq) 1 3 2 1070 430 1270
+preplace netloc POINT_TO_POINT<net_container>nios_to_periph_sys</net_container>(MASTER)pll.outclk2,(SLAVE)mda_adc.clock_sink) 1 2 2 NJ 180 990
+preplace netloc FAN_OUT<net_container>nios_to_periph_sys</net_container>(SLAVE)nios2_gen2.clk,(MASTER)pll.outclk0,(SLAVE)jtag_uart.clk,(SLAVE)onchip_memory2.clk1) 1 2 3 570 140 NJ 140 1370
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)nios_to_periph_sys.rs232,(SLAVE)RS232_0.conduit_end) 1 0 4 NJ 520 NJ 520 NJ 520 NJ
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)led.external_connection,(SLAVE)nios_to_periph_sys.out_port_to_led) 1 0 5 NJ 840 NJ 840 NJ 840 NJ 840 NJ
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)nios_to_periph_sys.mda_adc,(SLAVE)mda_adc.conduit_end) 1 0 4 NJ 80 NJ 80 NJ 80 NJ
+preplace netloc INTERCONNECT<net_container>nios_to_periph_sys</net_container>(SLAVE)onchip_memory2.reset1,(SLAVE)key.reset,(SLAVE)led.reset,(MASTER)clk_50.clk_reset,(SLAVE)sysid.reset,(SLAVE)nios_timer.reset,(SLAVE)mda_motor_control.reset,(MASTER)nios2_gen2.debug_reset_request,(SLAVE)RS232_0.reset,(SLAVE)clk_50.clk_in_reset,(SLAVE)sw.reset,(SLAVE)pll.reset,(SLAVE)mda_adc.reset_sink,(SLAVE)jtag_uart.reset,(SLAVE)nios2_gen2.reset) 1 0 5 150 420 370 500 590 220 1050 450 1330
+preplace netloc INTERCONNECT<net_container>nios_to_periph_sys</net_container>(SLAVE)jtag_uart.avalon_jtag_slave,(SLAVE)onchip_memory2.s1,(SLAVE)nios_timer.s1,(MASTER)nios2_gen2.data_master,(SLAVE)key.s1,(MASTER)nios2_gen2.instruction_master,(SLAVE)led.s1,(SLAVE)mda_motor_control.avalon_slave_0,(SLAVE)RS232_0.avalon_slave_0,(SLAVE)nios2_gen2.debug_mem_slave,(SLAVE)sysid.control_slave,(SLAVE)mda_adc.avalon_slave_0_1,(SLAVE)sw.s1) 1 2 3 630 200 1030 470 1350
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)mda_motor_control.conduit_end,(SLAVE)nios_to_periph_sys.mda_motor_control) 1 0 4 NJ 540 NJ 540 NJ 540 NJ
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)nios_to_periph_sys.in_port_from_key,(SLAVE)key.external_connection) 1 0 5 NJ 340 NJ 340 NJ 240 NJ 240 NJ
+preplace netloc EXPORT<net_container>nios_to_periph_sys</net_container>(SLAVE)sw.external_connection,(SLAVE)nios_to_periph_sys.in_port_from_sw) 1 0 5 NJ 620 NJ 620 NJ 620 NJ 620 NJ
+preplace netloc FAN_OUT<net_container>nios_to_periph_sys</net_container>(SLAVE)sw.clk,(SLAVE)sysid.clk,(SLAVE)key.clk,(SLAVE)led.clk,(MASTER)pll.outclk1) 1 2 3 NJ 160 NJ 160 1290
+preplace netloc FAN_OUT<net_container>nios_to_periph_sys</net_container>(SLAVE)pll.refclk,(SLAVE)nios_timer.clk,(MASTER)clk_50.clk,(SLAVE)mda_motor_control.clock,(SLAVE)RS232_0.clock) 1 1 4 350 480 NJ 480 1010 600 NJ
+levelinfo -pg 1 0 120 1600
+levelinfo -hier nios_to_periph_sys 130 180 400 750 1110 1440 1590

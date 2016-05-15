@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <preferences>
  <debug showDebugMenu="0" />
- <systemtable filter="All Interfaces" showClockDomains="0" showResetDomains="1">
+ <systemtable
+   filter="nios_to_periph_sys.clk_50 OR pll.outclk0 OR pll.outclk1 OR pll.outclk2"
+   showResetDomains="0"
+   showClockDomains="1">
   <columns>
-   <connections preferredWidth="287" />
-   <irq preferredWidth="34" />
-   <inputclock preferredWidth="142" />
+   <connections preferredWidth="191" />
+   <irq preferredWidth="143" />
+   <name preferredWidth="193" />
+   <inputclock preferredWidth="114" />
   </columns>
  </systemtable>
- <clocktable>
-  <columns>
-   <clockname preferredWidth="169" />
-   <clocksource preferredWidth="169" />
-   <frequency preferredWidth="150" />
-  </columns>
- </clocktable>
+ <library expandedCategories="Project,Library" />
  <window width="1855" height="1056" x="65" y="24" />
- <library
-   expandedCategories="Library/University Program,Library/Interface Protocols/Transceiver PLL,Library/Basic Functions/Clocks; PLLs and Resets,Library/Basic Functions,Library,Library/Interface Protocols,Library/Basic Functions/Clocks; PLLs and Resets/PLL,Project,Library/University Program/Clock" />
- <generation path="/home/carl/Tempest/fpga/fpga_hw/top_level" simulation="NONE" />
  <hdlexample language="VERILOG" />
 </preferences>

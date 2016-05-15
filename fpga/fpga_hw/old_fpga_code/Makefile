@@ -28,7 +28,6 @@ all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt
 
 clean: clean_sopc
 	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
-	quartus_sh --clean -c MDA_DE0_Nano_SOC MDA_DE0_Nano_SOC
 
 clean_sopc:
 	rm -rf led.v DE0_Nano_SOPC_sim i2c_scl.v cpu_oci_test_bench.v timer.v DE0_Nano_SOPC_log.txt cpu_rf_ram_a.mif cpu_rf_ram_b.mif altpll_sys.v DE0_Nano_SOPC.ptf.bak key.v epcs.v DE0_Nano_SOPC.ptf sysid.v adc_spi_read.v epcs_boot_rom_synth.hex DE0_Nano_SOPC.ptf.8.0 DE0_Nano_SOPC_clock_0.v DE0_Nano_SOPC_clock_1.v DE0_Nano_SOPC_generation_script cpu_ic_tag_ram.mif cpu.ocp DE0_Nano_SOPC_inst.v i2c_sda.v altpll_sys.vo select_i2c_clk.v sdram.v  DE0_Nano_SOPC.html cpu_jtag_debug_module_wrapper.v cpu_jtag_debug_module_tck.v clock_crossing_io2.v DE0_Nano_SOPC.bsf  jtag_uart.v  DE0_Nano_SOPC.sopcinfo  .sopc_builder sopc_builder_log.txt cpu_test_bench.v cpu.v sdram_test_component.v cpu_mult_cell.v sw.v cpu_bht_ram.mif clock_crossing_io.v g_sensor_int.v gsensor_spi.v DE0_Nano_SOPC.qip cpu.sdc cpu_dc_tag_ram.mif cpu_jtag_debug_module_sysclk.v DE0_Nano_SOPC.ptf.pre_generation_ptf DE0_Nano_SOPC.v cpu_ociram_default_contents.mif motor_controller_0.v DE0_Nano_SOPC_clock_2.v
