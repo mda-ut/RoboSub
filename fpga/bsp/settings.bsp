@@ -2,19 +2,19 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>5-May-2016 8:20:54 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1462494054541</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>18-May-2016 1:28:09 AM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1463560089919</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>./</BspGeneratedLocation>
         <BspSettingsFile>./bsp/settings.bsp</BspSettingsFile>
-        <SopcDesignFile>../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo</SopcDesignFile>
+        <SopcDesignFile>../fpga_hw/top_level/nios_to_periph_sys.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
-        <Cpu>nios2_gen2_0</Cpu>
+        <Cpu>nios2_gen2</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
         <Setting>
                 <SettingName>hal.sys_clk_timer</SettingName>
                 <Identifier>ALT_SYS_CLK</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>controller_interrupt_counter</Value>
+                <Value>nios_timer</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>system_h_define</DestinationFile>
                 <Description>Slave descriptor of the system clock timer device. This device provides a periodic interrupt ("tick") and is typically required for RTOS use. This setting defines the value of ALT_SYS_CLK in system.h.</Description>
@@ -146,7 +146,7 @@
                 <SettingName>hal.linker.exception_stack_memory_region_name</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>onchip_memory2_0</Value>
+                <Value>onchip_memory2</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>none</DestinationFile>
                 <Description>Name of the existing memory region that will be divided up to create the 'exception_stack' memory region. The selected region name will be adjusted automatically when the BSP is generated to create the 'exception_stack' memory region.</Description>
@@ -182,7 +182,7 @@
                 <SettingName>hal.linker.interrupt_stack_memory_region_name</SettingName>
                 <Identifier>none</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>onchip_memory2_0</Value>
+                <Value>onchip_memory2</Value>
                 <DefaultValue>none</DefaultValue>
                 <DestinationFile>none</DestinationFile>
                 <Description>Name of the existing memory region that will be divided up to create the 'interrupt_stack' memory region. The selected region name will be adjusted automatically when the BSP is generated to create the 'interrupt_stack' memory region.</Description>
@@ -887,93 +887,93 @@
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
         <MemoryMap>
-                <slaveDescriptor>sw</slaveDescriptor>
-                <addressRange>0x00000000 - 0x0000000F</addressRange>
+                <slaveDescriptor>onchip_memory2</slaveDescriptor>
+                <addressRange>0x00080000 - 0x000C0FB1</addressRange>
+                <addressSpan>266162</addressSpan>
+                <attributes>memory</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>mda_motor_control</slaveDescriptor>
+                <addressRange>0x00101000 - 0x0010107F</addressRange>
+                <addressSpan>128</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>mda_adc</slaveDescriptor>
+                <addressRange>0x00101080 - 0x001010BF</addressRange>
+                <addressSpan>64</addressSpan>
+                <attributes/>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>nios_timer</slaveDescriptor>
+                <addressRange>0x001010C0 - 0x001010DF</addressRange>
+                <addressSpan>32</addressSpan>
+                <attributes>timer</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>led</slaveDescriptor>
+                <addressRange>0x001010E0 - 0x001010EF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>led</slaveDescriptor>
-                <addressRange>0x00000010 - 0x0000001F</addressRange>
+                <slaveDescriptor>sw</slaveDescriptor>
+                <addressRange>0x001010F0 - 0x001010FF</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>key</slaveDescriptor>
-                <addressRange>0x00000020 - 0x0000002F</addressRange>
+                <addressRange>0x00101100 - 0x0010110F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>sysid</slaveDescriptor>
-                <addressRange>0x00000030 - 0x00000037</addressRange>
+                <addressRange>0x00101110 - 0x00101117</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
-                <addressRange>0x01080000 - 0x010C0FB1</addressRange>
-                <addressSpan>266162</addressSpan>
-                <attributes>memory</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>motor_controller_0</slaveDescriptor>
-                <addressRange>0x01101000 - 0x0110107F</addressRange>
-                <addressSpan>128</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>controller_interrupt_counter</slaveDescriptor>
-                <addressRange>0x01101080 - 0x0110109F</addressRange>
-                <addressSpan>32</addressSpan>
-                <attributes>timer</attributes>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>RS232_0</slaveDescriptor>
-                <addressRange>0x011010A0 - 0x011010A7</addressRange>
+                <slaveDescriptor>RS232</slaveDescriptor>
+                <addressRange>0x00101118 - 0x0010111F</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes/>
         </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>jtag_uart</slaveDescriptor>
-                <addressRange>0x011010A8 - 0x011010AF</addressRange>
+                <addressRange>0x00101120 - 0x00101127</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>adc_controller_0</slaveDescriptor>
-                <addressRange>0x011010B0 - 0x011010B3</addressRange>
-                <addressSpan>4</addressSpan>
-                <attributes/>
-        </MemoryMap>
-        <MemoryMap>
-                <slaveDescriptor>power_management_slave_0</slaveDescriptor>
-                <addressRange>0x011010B4 - 0x011010B7</addressRange>
+                <slaveDescriptor>mda_pwr_mgmt</slaveDescriptor>
+                <addressRange>0x00101128 - 0x0010112B</addressRange>
                 <addressSpan>4</addressSpan>
                 <attributes/>
         </MemoryMap>
         <LinkerSection>
                 <sectionName>.text</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.rodata</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.rwdata</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.bss</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.heap</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
         <LinkerSection>
                 <sectionName>.stack</sectionName>
-                <regionName>onchip_memory2_0</regionName>
+                <regionName>onchip_memory2</regionName>
         </LinkerSection>
 </sch:Settings>

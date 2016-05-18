@@ -69,7 +69,7 @@ module mda_motor_control_wrapper(input clk, input reset, input chipselect, input
   genvar i;
     for (i=0; i<8; i=i+1)
       begin : motor_control_loop
-        motor_controller mc(clk, in[i], period, duty_cycle[(i+1)*`PERIOD_LENGTH-1:i*`PERIOD_LENGTH], GPIO_out[i*4+3:i*4]);
+        mda_motor_control mc(clk, in[i], period, duty_cycle[(i+1)*`PERIOD_LENGTH-1:i*`PERIOD_LENGTH], GPIO_out[i*4+3:i*4]);
       end
   endgenerate
 endmodule

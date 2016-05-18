@@ -9,7 +9,7 @@ module mda_motor_control (input clk, input on, input [15:0] period, input [15:0]
 	wire motor_on, motor_dir;
 	
 	mda_motor_control_pwm_gen pwm_generator (clk, on, period, duty_cycle, motor_dir, motor_on);
-	motor_internal mi(clk, motor_dir, motor_on, out);
+	mda_motor_control_internal mi(clk, motor_dir, motor_on, out);
 
 endmodule
 

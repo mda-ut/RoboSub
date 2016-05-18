@@ -1,9 +1,9 @@
 # memory.gdb - GDB memory region definitions
 #
-# Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'DE0_Nano_SOPC'
-# SOPC Builder design path: ../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo
+# Machine generated for CPU 'nios2_gen2' in SOPC Builder design 'nios_to_periph_sys'
+# SOPC Builder design path: ../fpga_hw/top_level/nios_to_periph_sys.sopcinfo
 #
-# Generated: Wed May 04 23:29:37 EDT 2016
+# Generated: Wed May 18 01:01:21 PDT 2016
 
 # DO NOT MODIFY THIS FILE
 #
@@ -46,5 +46,5 @@
 # The cache attribute is specified which improves GDB performance
 # by allowing GDB to cache memory contents on the host.
 
-# onchip_memory2_0
-memory 0x1080000 0x10c0fb2 cache
+# onchip_memory2
+memory 0x80000 0xc0fb2 cache

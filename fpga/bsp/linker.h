@@ -1,10 +1,10 @@
 /*
  * linker.h - Linker script mapping information
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'DE0_Nano_SOPC'
- * SOPC Builder design path: ../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo
+ * Machine generated for CPU 'nios2_gen2' in SOPC Builder design 'nios_to_periph_sys'
+ * SOPC Builder design path: ../fpga_hw/top_level/nios_to_periph_sys.sopcinfo
  *
- * Generated: Wed May 04 23:29:37 EDT 2016
+ * Generated: Wed May 18 01:01:21 PDT 2016
  */
 
 /*
@@ -65,9 +65,9 @@
  *
  */
 
-#define ONCHIP_MEMORY2_0_REGION_BASE 0x1080020
-#define ONCHIP_MEMORY2_0_REGION_SPAN 266130
-#define RESET_REGION_BASE 0x1080000
+#define ONCHIP_MEMORY2_REGION_BASE 0x80020
+#define ONCHIP_MEMORY2_REGION_SPAN 266130
+#define RESET_REGION_BASE 0x80000
 #define RESET_REGION_SPAN 32
 
 
@@ -76,11 +76,11 @@
  *
  */
 
-#define ALT_EXCEPTIONS_DEVICE ONCHIP_MEMORY2_0
-#define ALT_RESET_DEVICE ONCHIP_MEMORY2_0
-#define ALT_RODATA_DEVICE ONCHIP_MEMORY2_0
-#define ALT_RWDATA_DEVICE ONCHIP_MEMORY2_0
-#define ALT_TEXT_DEVICE ONCHIP_MEMORY2_0
+#define ALT_EXCEPTIONS_DEVICE ONCHIP_MEMORY2
+#define ALT_RESET_DEVICE ONCHIP_MEMORY2
+#define ALT_RODATA_DEVICE ONCHIP_MEMORY2
+#define ALT_RWDATA_DEVICE ONCHIP_MEMORY2
+#define ALT_TEXT_DEVICE ONCHIP_MEMORY2
 
 
 /*

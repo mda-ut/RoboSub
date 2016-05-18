@@ -101,7 +101,7 @@ ACDS_VERSION := 15.1
 # BUILD_NUMBER: 185
 
 SETTINGS_FILE := settings.bsp
-SOPC_FILE := ../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo
+SOPC_FILE := ../fpga_hw/top_level/nios_to_periph_sys.sopcinfo
 
 #-------------------------------------------------------------------------------
 #                             TOOL & COMMAND DEFINITIONS

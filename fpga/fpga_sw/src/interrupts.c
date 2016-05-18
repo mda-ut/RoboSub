@@ -58,7 +58,7 @@ void set_controller(int status)
      set_target_heading(o.yaw);
      set_target_depth(get_depth());
 
-     IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
+     IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 7); // Start timer interrupt
    } else {
       // Turn off all motors
       int i;
@@ -91,11 +91,11 @@ static void timer_interrupts(void* context, alt_u32 id)
    }
    
    // Restart Interrupt for this timer
-   IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
-   IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
+   IOWR_ALTERA_AVALON_TIMER_SNAPL(NIOS_TIMER_BASE, 1);
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE,0); // Clear interrupt (ITO)
+   IOWR_ALTERA_AVALON_TIMER_STATUS(NIOS_TIMER_BASE, 0); // Clear TO
    if (enable_controller) {
-      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
+      IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE,7); // Enable IRQ and Start timer
    }
 }
 
@@ -107,7 +107,7 @@ static void timer_interrupts(void* context, alt_u32 id)
 static void pm_interrupt(void *context, alt_u32 id)
 {
    // Get failing voltage line
-   int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
+   int which_failed = IORD(MDA_PWR_MGMT_BASE, 0);
 
    if (which_failed == 5 || which_failed == 6) return; // ignore 3.3V failures.
    power_failures[which_failed]++;
@@ -118,7 +118,7 @@ static void pm_interrupt(void *context, alt_u32 id)
    }
 
    // Turn off power
-   IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
+   IOWR(MDA_PWR_MGMT_BASE, 0, 0);
 
    // Might be in the middle of printing, print a leading newline
    alt_printf("\npower failed\n");
@@ -158,20 +158,20 @@ static void pm_interrupt(void *context, alt_u32 id)
 void init_interrupts()
 {
    // Setup power management interrupt
-   alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,(void *)pm_interrupt,0,0); // Register Interrupt (check system.h for defs)
+   alt_ic_isr_register(MDA_PWR_MGMT_IRQ_INTERRUPT_CONTROLLER_ID, MDA_PWR_MGMT_IRQ,(void *)pm_interrupt,0,0); // Register Interrupt (check system.h for defs)
 
    const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ / NUM_DEPTH_VALUES;
    const short period_lo = timer_period;
    const short period_hi = timer_period >> 16;
 
    // Setup controller interrupt
-   alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,(void *)timer_interrupts,0,0); // Register Interrupt (check system.h for defs)
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear control register
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2); // Continuous Mode ON
-   IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, period_lo); // Timer interrupt period
-   IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, period_hi);
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3); // Enable timer_0 interrupt
+   alt_ic_isr_register(NIOS_TIMER_IRQ_INTERRUPT_CONTROLLER_ID,NIOS_TIMER_IRQ,(void *)timer_interrupts,0,0); // Register Interrupt (check system.h for defs)
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 0); // Clear control register
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 2); // Continuous Mode ON
+   IOWR_ALTERA_AVALON_TIMER_PERIODL(NIOS_TIMER_BASE, period_lo); // Timer interrupt period
+   IOWR_ALTERA_AVALON_TIMER_PERIODH(NIOS_TIMER_BASE, period_hi);
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 3); // Enable timer_0 interrupt
    if (enable_controller) {
-      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
+      IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 7); // Start timer interrupt
    }
 }

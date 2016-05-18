@@ -8,14 +8,22 @@
 # File (.qsf), and the list of source files used.
 ###################################################################
 
-PROJECT=DE0_Nano
-SOPC_FILE=DE0_Nano_SOPC.qsys
-SOPC_PATH=$(PROJECT)_SOPC/synthesis/
-SOPC_SUBMODULES=$(SOPC_PATH)/submodules/
-SOPCINFO_FILE=$(SOPC_FILE)info
-SOPCINFO_FILE_DEPENDS=$(SOPC_FILE)
-SOURCE_FILES = DE0_Nano.v $(SOPCINFO_FILE)
-ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf 
+PROJECT=MDA_DE0_Nano_SOC
+QSYS_NAME=nios_to_periph_sys
+FAMILY = "Cyclone V"
+PART = 5CSEMA4U23C6
+
+QSYS_FILE=$(QSYS_NAME).qsys
+QSYS_PATH=$(QSYS_NAME)/synthesis/
+QSYS_SUBMODULES=$(QSYS_PATH)submodules/
+QSYSINFO_FILE=$(QSYS_PATH)$(QSYS_NAME)_generation.rpt
+QSYSINFO_FILE_DEPENDS=$(QSYS_FILE)
+
+PROJECT_SUBMODULE_FILES= mda_adc/*.v mda_common_modules/*.v mda_motor_control/*.v mda_power_management/*.v RS232/*.v
+SOURCE_FILES = $(PROJECT).v $(QSYSINFO_FILE) $(PROJECT_SUBMODULE_FILES)
+ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
+OUTPUT_FOLDER=output_files
+
 
 ###################################################################
 # Main Targets
@@ -24,77 +32,51 @@ ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 # clean: remove output files and database
 ###################################################################
 
-all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt 
+all: $(OUTPUT_FOLDER)/$(PROJECT).asm.rpt $(OUTPUT_FOLDER)/$(PROJECT).sta.rpt 
 
-clean: clean_sopc
+clean: #clean_sopc
 	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
 	quartus_sh --clean -c MDA_DE0_Nano_SOC MDA_DE0_Nano_SOC
 
-clean_sopc:
-	rm -rf led.v DE0_Nano_SOPC_sim i2c_scl.v cpu_oci_test_bench.v timer.v DE0_Nano_SOPC_log.txt cpu_rf_ram_a.mif cpu_rf_ram_b.mif altpll_sys.v DE0_Nano_SOPC.ptf.bak key.v epcs.v DE0_Nano_SOPC.ptf sysid.v adc_spi_read.v epcs_boot_rom_synth.hex DE0_Nano_SOPC.ptf.8.0 DE0_Nano_SOPC_clock_0.v DE0_Nano_SOPC_clock_1.v DE0_Nano_SOPC_generation_script cpu_ic_tag_ram.mif cpu.ocp DE0_Nano_SOPC_inst.v i2c_sda.v altpll_sys.vo select_i2c_clk.v sdram.v  DE0_Nano_SOPC.html cpu_jtag_debug_module_wrapper.v cpu_jtag_debug_module_tck.v clock_crossing_io2.v DE0_Nano_SOPC.bsf  jtag_uart.v  DE0_Nano_SOPC.sopcinfo  .sopc_builder sopc_builder_log.txt cpu_test_bench.v cpu.v sdram_test_component.v cpu_mult_cell.v sw.v cpu_bht_ram.mif clock_crossing_io.v g_sensor_int.v gsensor_spi.v DE0_Nano_SOPC.qip cpu.sdc cpu_dc_tag_ram.mif cpu_jtag_debug_module_sysclk.v DE0_Nano_SOPC.ptf.pre_generation_ptf DE0_Nano_SOPC.v cpu_ociram_default_contents.mif motor_controller_0.v DE0_Nano_SOPC_clock_2.v
+#clean_sopc:
+#	rm -rf led.v DE0_Nano_SOPC_sim i2c_scl.v cpu_oci_test_bench.v timer.v DE0_Nano_SOPC_log.txt cpu_rf_ram_a.mif cpu_rf_ram_b.mif altpll_sys.v DE0_Nano_SOPC.ptf.bak key.v epcs.v DE0_Nano_SOPC.ptf sysid.v adc_spi_read.v epcs_boot_rom_synth.hex DE0_Nano_SOPC.ptf.8.0 DE0_Nano_SOPC_clock_0.v DE0_Nano_SOPC_clock_1.v DE0_Nano_SOPC_generation_script cpu_ic_tag_ram.mif cpu.ocp DE0_Nano_SOPC_inst.v i2c_sda.v altpll_sys.vo select_i2c_clk.v sdram.v  DE0_Nano_SOPC.html cpu_jtag_debug_module_wrapper.v cpu_jtag_debug_module_tck.v clock_crossing_io2.v DE0_Nano_SOPC.bsf  jtag_uart.v  DE0_Nano_SOPC.sopcinfo  .sopc_builder sopc_builder_log.txt cpu_test_bench.v cpu.v sdram_test_component.v cpu_mult_cell.v sw.v cpu_bht_ram.mif clock_crossing_io.v g_sensor_int.v gsensor_spi.v DE0_Nano_SOPC.qip cpu.sdc cpu_dc_tag_ram.mif cpu_jtag_debug_module_sysclk.v DE0_Nano_SOPC.ptf.pre_generation_ptf DE0_Nano_SOPC.v cpu_ociram_default_contents.mif motor_controller_0.v DE0_Nano_SOPC_clock_2.v
 
 
-.PHONY: clean all clean_sopc
-
-map: smart.log $(PROJECT).map.rpt
-fit: smart.log $(PROJECT).fit.rpt
-asm: smart.log $(PROJECT).asm.rpt
-sta: smart.log $(PROJECT).sta.rpt
-smart: smart.log
+.PHONY: clean all
 
 ###################################################################
 # Executable Configuration
 ###################################################################
 
-#previously family CycloneIVE part EP4CE22F17C6
-
-MAP_ARGS = --family=CycloneV
-FIT_ARGS = --part=5CSEMA4U23C6
-ASM_ARGS =
+MAP_ARGS = --family=$(FAMILY) --read_settings_files=on --write_settings_files=off
+FIT_ARGS = --part=$(PART) --read_settings_files=off --write_settings_files=off
+ASM_ARGS = --read_settings_files=off --write_settings_files=off
 STA_ARGS =
+EDA_ARGS = --read_settings_files=off --write_settings_files=off
 
 ###################################################################
 # Target implementations
 ###################################################################
 
-STAMP = echo done >
 
-$(SOPCINFO_FILE): $(SOPCINFO_FILE_DEPENDS)
-	qsys-generate $(SOPC_FILE) --synthesis=VERILOG -bsf || [ $$? -eq 4]
-	#sopc_builder --generate $(SOPC_FILE) || [ $$? -eq 4 ]
+$(QSYSINFO_FILE): $(QSYSINFO_FILE_DEPENDS)
+	qsys-generate $(QSYS_FILE) -bsf -od=$(QSYS_NAME) --family=$(FAMILY) --part=$(PART)
+	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_PATH) --family=$(FAMILY) --part=$(PART) || [$$? -eq 4]
 
-$(PROJECT).map.rpt: map.chg $(SOURCE_FILES) 
-	quartus_map $(MAP_ARGS) -l $(SOPC_PATH) -l $(SOPC_SUBMODULES) $(PROJECT)
-	$(STAMP) fit.chg
 
-$(PROJECT).fit.rpt: fit.chg $(PROJECT).map.rpt
-	quartus_fit $(FIT_ARGS) $(PROJECT)
-	$(STAMP) asm.chg
-	$(STAMP) sta.chg
+$(OUTPUT_FOLDER)/$(PROJECT).map.rpt: $(SOURCE_FILES) 
+	quartus_map $(MAP_ARGS) $(PROJECT) -c $(PROJECT)
+#quartus_map $(MAP_ARGS) -l $(SOPC_PATH) -l $(SOPC_SUBMODULES) $(PROJECT)
 
-$(PROJECT).asm.rpt: asm.chg $(PROJECT).fit.rpt
-	quartus_asm $(ASM_ARGS) $(PROJECT)
+$(OUTPUT_FOLDER)/$(PROJECT).fit.rpt: $(OUTPUT_FOLDER)/$(PROJECT).map.rpt
+	quartus_fit $(FIT_ARGS) $(PROJECT) -c $(PROJECT)
 
-$(PROJECT).sta.rpt: sta.chg $(PROJECT).fit.rpt
-	quartus_sta $(STA_ARGS) $(PROJECT) 
+$(OUTPUT_FOLDER)/$(PROJECT).asm.rpt: $(OUTPUT_FOLDER)/$(PROJECT).fit.rpt
+	quartus_asm $(ASM_ARGS) $(PROJECT) -c $(PROJECT)
 
-smart.log: $(ASSIGNMENT_FILES)
-	quartus_sh --determine_smart_action $(PROJECT) > smart.log
+$(OUTPUT_FOLDER)/$(PROJECT).sta.rpt: $(OUTPUT_FOLDER)/$(PROJECT).fit.rpt
+	quartus_sta $(STA_ARGS) $(PROJECT) -c $(PROJECT)
 
-###################################################################
-# Project initialization
-###################################################################
-
-$(ASSIGNMENT_FILES):
-	quartus_sh --prepare $(PROJECT)
-
-map.chg:
-	$(STAMP) map.chg
-fit.chg:
-	$(STAMP) fit.chg
-sta.chg:
-	$(STAMP) sta.chg
-asm.chg:
-	$(STAMP) asm.chg
-
+$(OUTPUT_FOLDER)/$(PROJECT).eda.rpt: $(OUTPUT_FOLDER)/$(PROJECT).fit.rpt
+	quartus_eda $(EDA_ARGS) $(PROJECT) -c $(PROJECT)
 

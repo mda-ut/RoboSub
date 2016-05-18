@@ -853,7 +853,7 @@
 										<fullscreen-action>false</fullscreen-action>
 										<node nodeId="1372710005721" orientation="HORIZONTAL" divider="0.22181146025878004">
 											<node nodeId="1375985011088" orientation="VERTICAL" divider="0.504054054054054">
-												<leaf id="2" nodeId="1375985003630">
+												<leaf id="0" nodeId="1375985003630">
 													<placeholders>
 														<placeholder>dock.single.IP\ Catalog</placeholder>
 														<placeholder>dock.single.Reset\ Domains\ \-\ Beta</placeholder>
@@ -882,7 +882,7 @@
 														</entry>
 													</placeholder-map>
 												</leaf>
-												<leaf id="0" nodeId="1375985011087">
+												<leaf id="2" nodeId="1375985011087">
 													<placeholders>
 														<placeholder>dock.single.Hierarchy</placeholder>
 													</placeholders>
@@ -1028,7 +1028,7 @@
 											<format>dock.PlaceholderList</format>
 											<entry>
 												<key shared="false">
-													<placeholder>dock.single.Hierarchy</placeholder>
+													<placeholder>dock.single.IP\ Catalog</placeholder>
 												</key>
 												<item key="convert" type="b">true</item>
 												<item key="convert-keys" type="a">
@@ -1038,11 +1038,11 @@
 												</item>
 												<item key="dock.index" type="i">0</item>
 												<item key="dock.id" type="i">0</item>
-												<item key="dock.placeholder" type="s">dock.single.Hierarchy</item>
+												<item key="dock.placeholder" type="s">dock.single.IP\ Catalog</item>
 											</entry>
 											<entry>
 												<key shared="false">
-													<placeholder>dock.single.Device\ Family</placeholder>
+													<placeholder>dock.single.Clock\ Domains\ \-\ Beta</placeholder>
 												</key>
 												<item key="convert" type="b">true</item>
 												<item key="convert-keys" type="a">
@@ -1052,26 +1052,31 @@
 												</item>
 												<item key="dock.index" type="i">1</item>
 												<item key="dock.id" type="i">1</item>
-												<item key="dock.placeholder" type="s">dock.single.Device\ Family</item>
+												<item key="dock.placeholder" type="s">dock.single.Clock\ Domains\ \-\ Beta</item>
+											</entry>
+											<entry>
+												<key shared="false">
+													<placeholder>dock.single.Reset\ Domains\ \-\ Beta</placeholder>
+												</key>
 											</entry>
 										</placeholders>
 									</layout>
 									<children ignore="false">
 										<child>
-											<layout factory="predefined" placeholder="dock.single.Hierarchy">
-												<replacement id="dockablesingle Hierarchy"/>
+											<layout factory="predefined" placeholder="dock.single.IP\ Catalog">
+												<replacement id="dockablesingle IP Catalog"/>
 												<delegate id="delegate_ccontrol backup factory id">
-													<id>Hierarchy</id>
+													<id>IP Catalog</id>
 													<area/>
 												</delegate>
 											</layout>
 											<children ignore="false"/>
 										</child>
 										<child>
-											<layout factory="predefined" placeholder="dock.single.Device\ Family">
-												<replacement id="dockablesingle Device Family"/>
+											<layout factory="predefined" placeholder="dock.single.Clock\ Domains\ \-\ Beta">
+												<replacement id="dockablesingle Clock Domains"/>
 												<delegate id="delegate_ccontrol backup factory id">
-													<id>Device Family</id>
+													<id>Clock Domains - Beta</id>
 													<area/>
 												</delegate>
 											</layout>
@@ -1219,7 +1224,7 @@
 											<format>dock.PlaceholderList</format>
 											<entry>
 												<key shared="false">
-													<placeholder>dock.single.IP\ Catalog</placeholder>
+													<placeholder>dock.single.Hierarchy</placeholder>
 												</key>
 												<item key="convert" type="b">true</item>
 												<item key="convert-keys" type="a">
@@ -1229,11 +1234,11 @@
 												</item>
 												<item key="dock.index" type="i">0</item>
 												<item key="dock.id" type="i">0</item>
-												<item key="dock.placeholder" type="s">dock.single.IP\ Catalog</item>
+												<item key="dock.placeholder" type="s">dock.single.Hierarchy</item>
 											</entry>
 											<entry>
 												<key shared="false">
-													<placeholder>dock.single.Clock\ Domains\ \-\ Beta</placeholder>
+													<placeholder>dock.single.Device\ Family</placeholder>
 												</key>
 												<item key="convert" type="b">true</item>
 												<item key="convert-keys" type="a">
@@ -1243,31 +1248,26 @@
 												</item>
 												<item key="dock.index" type="i">1</item>
 												<item key="dock.id" type="i">1</item>
-												<item key="dock.placeholder" type="s">dock.single.Clock\ Domains\ \-\ Beta</item>
-											</entry>
-											<entry>
-												<key shared="false">
-													<placeholder>dock.single.Reset\ Domains\ \-\ Beta</placeholder>
-												</key>
+												<item key="dock.placeholder" type="s">dock.single.Device\ Family</item>
 											</entry>
 										</placeholders>
 									</layout>
 									<children ignore="false">
 										<child>
-											<layout factory="predefined" placeholder="dock.single.IP\ Catalog">
-												<replacement id="dockablesingle IP Catalog"/>
+											<layout factory="predefined" placeholder="dock.single.Hierarchy">
+												<replacement id="dockablesingle Hierarchy"/>
 												<delegate id="delegate_ccontrol backup factory id">
-													<id>IP Catalog</id>
+													<id>Hierarchy</id>
 													<area/>
 												</delegate>
 											</layout>
 											<children ignore="false"/>
 										</child>
 										<child>
-											<layout factory="predefined" placeholder="dock.single.Clock\ Domains\ \-\ Beta">
-												<replacement id="dockablesingle Clock Domains"/>
+											<layout factory="predefined" placeholder="dock.single.Device\ Family">
+												<replacement id="dockablesingle Device Family"/>
 												<delegate id="delegate_ccontrol backup factory id">
-													<id>Clock Domains - Beta</id>
+													<id>Device Family</id>
 													<area/>
 												</delegate>
 											</layout>

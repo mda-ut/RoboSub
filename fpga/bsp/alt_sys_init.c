@@ -1,10 +1,10 @@
 /*
  * alt_sys_init.c - HAL initialization source
  *
- * Machine generated for CPU 'nios2_gen2_0' in SOPC Builder design 'DE0_Nano_SOPC'
- * SOPC Builder design path: ../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo
+ * Machine generated for CPU 'nios2_gen2' in SOPC Builder design 'nios_to_periph_sys'
+ * SOPC Builder design path: ../fpga_hw/top_level/nios_to_periph_sys.sopcinfo
  *
- * Generated: Wed May 04 23:29:37 EDT 2016
+ * Generated: Wed May 18 01:01:21 PDT 2016
  */
 
 /*
@@ -67,10 +67,10 @@
  * Allocate the device storage
  */
 
-ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2_0, nios2_gen2_0);
+ALTERA_NIOS2_GEN2_IRQ_INSTANCE ( NIOS2_GEN2, nios2_gen2);
 ALTERA_AVALON_JTAG_UART_INSTANCE ( JTAG_UART, jtag_uart);
 ALTERA_AVALON_SYSID_QSYS_INSTANCE ( SYSID, sysid);
-ALTERA_AVALON_TIMER_INSTANCE ( CONTROLLER_INTERRUPT_COUNTER, controller_interrupt_counter);
+ALTERA_AVALON_TIMER_INSTANCE ( NIOS_TIMER, nios_timer);
 
 /*
  * Initialize the interrupt controller devices
@@ -82,7 +82,7 @@ ALTERA_AVALON_TIMER_INSTANCE ( CONTROLLER_INTERRUPT_COUNTER, controller_interrup
 
 void alt_irq_init ( const void* base )
 {
-    ALTERA_NIOS2_GEN2_IRQ_INIT ( NIOS2_GEN2_0, nios2_gen2_0);
+    ALTERA_NIOS2_GEN2_IRQ_INIT ( NIOS2_GEN2, nios2_gen2);
     alt_irq_cpu_enable_interrupts();
 }
 
@@ -93,7 +93,7 @@ void alt_irq_init ( const void* base )
 
 void alt_sys_init( void )
 {
-    ALTERA_AVALON_TIMER_INIT ( CONTROLLER_INTERRUPT_COUNTER, controller_interrupt_counter);
+    ALTERA_AVALON_TIMER_INIT ( NIOS_TIMER, nios_timer);
     ALTERA_AVALON_JTAG_UART_INIT ( JTAG_UART, jtag_uart);
     ALTERA_AVALON_SYSID_QSYS_INIT ( SYSID, sysid);
 }

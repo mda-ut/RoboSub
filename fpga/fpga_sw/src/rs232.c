@@ -60,9 +60,9 @@ void rs232_init()
   initialized = true;
 
   // Register read interrupt handler
-  alt_ic_isr_register(RS232_0_IRQ_INTERRUPT_CONTROLLER_ID, RS232_0_IRQ, (void *)read_interrupt, 0, 0);
+  alt_ic_isr_register(RS232_IRQ_INTERRUPT_CONTROLLER_ID, RS232_IRQ, (void *)read_interrupt, 0, 0);
 
-  IOWR(RS232_0_BASE, RS232_CONTROL_OFFSET, RS232_READ_INTERRUPT);
+  IOWR(RS232_BASE, RS232_CONTROL_OFFSET, RS232_READ_INTERRUPT);
 }
 
 void rs232_shell()
@@ -88,7 +88,7 @@ static void read_interrupt(void *context, alt_u32 id)
   static int index = 0;
   //printf("hi\n");
   while (1) {
-    int data = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
+    int data = IORD(RS232_BASE, RS232_DATA_OFFSET);
     int read_avail = data >> 16;
 
     // End of data, return
@@ -171,7 +171,7 @@ int write_str(const char *str)
   int len = strlen(str);
   int i;
   for (i = 0; i < WRITE_ATTEMPTS; i++) {
-    int write_avail = IORD(RS232_0_BASE, RS232_CONTROL_OFFSET) >> 16;
+    int write_avail = IORD(RS232_BASE, RS232_CONTROL_OFFSET) >> 16;
     if (write_avail >= len) {
       break;
     }
@@ -182,7 +182,7 @@ int write_str(const char *str)
   }
 
   while(*str) {
-    IOWR(RS232_0_BASE, RS232_DATA_OFFSET, *str++);
+    IOWR(RS232_BASE, RS232_DATA_OFFSET, *str++);
   }
 
   return 0;

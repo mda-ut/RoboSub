@@ -5,11 +5,11 @@
  version="1.0"
  fabric="QSYS">
  <!-- Format version 15.1 185 (Future versions may contain additional information.) -->
- <!-- 2016.05.15.01:53:45 -->
+ <!-- 2016.05.18.01:16:36 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1463302425</value>
+  <value>1463559396</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -99,7 +99,7 @@
   <visible>true</visible>
   <valid>true</valid>
  </parameter>
- <module name="RS232_0" kind="RS232" version="1.0" path="RS232_0">
+ <module name="RS232" kind="RS232" version="1.0" path="RS232">
   <!-- Describes a single module. Module parameters are
 the requested settings for a module instance. -->
   <parameter name="BAUD_COUNTER_WIDTH">
@@ -698,7 +698,7 @@ particular module parameters. Connection points and their
 parameters are a RESULT of the module parameters. -->
    <parameter name="associatedAddressablePoint">
     <type>com.altera.entityinterfaces.IConnectionPoint</type>
-    <value>RS232_0.avalon_slave_0</value>
+    <value>RS232.avalon_slave_0</value>
     <derived>false</derived>
     <enabled>true</enabled>
     <visible>true</visible>
@@ -1019,9 +1019,9 @@ parameters are a RESULT of the module parameters. -->
    </clockDomainMember>
    <clockDomainMember>
     <isBridge>false</isBridge>
-    <moduleName>RS232_0</moduleName>
+    <moduleName>RS232</moduleName>
     <slaveName>clock</slaveName>
-    <name>RS232_0.clock</name>
+    <name>RS232.clock</name>
    </clockDomainMember>
    <clockDomainMember>
     <isBridge>false</isBridge>
@@ -6758,7 +6758,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="dataSlaveMapParam">
    <type>java.lang.String</type>
-   <value><![CDATA[<address-map><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x0' end='0x4' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='mda_adc.avalon_slave_0_1' start='0x101080' end='0x1010C0' type='mda_adc_wrapper.avalon_slave_0_1' /><slave name='nios_timer.s1' start='0x1010C0' end='0x1010E0' type='altera_avalon_timer.s1' /><slave name='led.s1' start='0x1010E0' end='0x1010F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010F0' end='0x101100' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x101100' end='0x101110' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x101110' end='0x101118' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232_0.avalon_slave_0' start='0x101118' end='0x101120' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x101120' end='0x101128' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></value>
+   <value><![CDATA[<address-map><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='mda_adc.avalon_slave_0_1' start='0x101080' end='0x1010C0' type='mda_adc_wrapper.avalon_slave_0_1' /><slave name='nios_timer.s1' start='0x1010C0' end='0x1010E0' type='altera_avalon_timer.s1' /><slave name='led.s1' start='0x1010E0' end='0x1010F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010F0' end='0x101100' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x101100' end='0x101110' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x101110' end='0x101118' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232.avalon_slave_0' start='0x101118' end='0x101120' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x101120' end='0x101128' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x101128' end='0x10112C' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /></address-map>]]></value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>false</visible>
@@ -7442,9 +7442,9 @@ parameters are a RESULT of the module parameters. -->
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
-    <moduleName>RS232_0</moduleName>
+    <moduleName>RS232</moduleName>
     <slaveName>avalon_slave_0</slaveName>
-    <name>RS232_0.avalon_slave_0</name>
+    <name>RS232.avalon_slave_0</name>
     <baseAddress>1052952</baseAddress>
     <span>8</span>
    </memoryBlock>
@@ -7453,7 +7453,7 @@ parameters are a RESULT of the module parameters. -->
     <moduleName>mda_pwr_mgmt</moduleName>
     <slaveName>avalon_slave_0</slaveName>
     <name>mda_pwr_mgmt.avalon_slave_0</name>
-    <baseAddress>0</baseAddress>
+    <baseAddress>1052968</baseAddress>
     <span>4</span>
    </memoryBlock>
    <memoryBlock>
@@ -7894,9 +7894,9 @@ parameters are a RESULT of the module parameters. -->
    </port>
    <interrupt>
     <isBridge>false</isBridge>
-    <moduleName>RS232_0</moduleName>
+    <moduleName>RS232</moduleName>
     <slaveName>interrupt_sender</slaveName>
-    <name>RS232_0.interrupt_sender</name>
+    <name>RS232.interrupt_sender</name>
     <interruptNumber>4</interruptNumber>
    </interrupt>
    <interrupt>
@@ -15097,7 +15097,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.TIMESTAMP</name>
-   <value>1463302425</value>
+   <value>1463559396</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.compatible</name>
@@ -15117,7 +15117,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.dts.params.timestamp</name>
-   <value>1463302425</value>
+   <value>1463559396</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.vendor</name>
@@ -15133,7 +15133,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="timestamp">
    <type>int</type>
-   <value>1463302425</value>
+   <value>1463559396</value>
    <derived>true</derived>
    <enabled>false</enabled>
    <visible>false</visible>
@@ -15707,11 +15707,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>avalon_slave_0</endConnectionPoint>
  </connection>
  <connection
-   name="nios2_gen2.data_master/RS232_0.avalon_slave_0"
+   name="nios2_gen2.data_master/RS232.avalon_slave_0"
    kind="avalon"
    version="15.1"
    start="nios2_gen2.data_master"
-   end="RS232_0.avalon_slave_0">
+   end="RS232.avalon_slave_0">
   <parameter name="arbitrationPriority">
    <type>int</type>
    <value>1</value>
@@ -15754,7 +15754,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <startModule>nios2_gen2</startModule>
   <startConnectionPoint>data_master</startConnectionPoint>
-  <endModule>RS232_0</endModule>
+  <endModule>RS232</endModule>
   <endConnectionPoint>avalon_slave_0</endConnectionPoint>
  </connection>
  <connection
@@ -15773,7 +15773,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <parameter name="baseAddress">
    <type>java.math.BigInteger</type>
-   <value>0x0000</value>
+   <value>0x00101128</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -16373,11 +16373,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>clock</endConnectionPoint>
  </connection>
  <connection
-   name="clk_50.clk/RS232_0.clock"
+   name="clk_50.clk/RS232.clock"
    kind="clock"
    version="15.1"
    start="clk_50.clk"
-   end="RS232_0.clock">
+   end="RS232.clock">
   <parameter name="deviceFamily">
    <type>java.lang.String</type>
    <value>UNKNOWN</value>
@@ -16396,7 +16396,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <startModule>clk_50</startModule>
   <startConnectionPoint>clk</startConnectionPoint>
-  <endModule>RS232_0</endModule>
+  <endModule>RS232</endModule>
   <endConnectionPoint>clock</endConnectionPoint>
  </connection>
  <connection
@@ -16670,11 +16670,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>clock_sink</endConnectionPoint>
  </connection>
  <connection
-   name="nios2_gen2.irq/RS232_0.interrupt_sender"
+   name="nios2_gen2.irq/RS232.interrupt_sender"
    kind="interrupt"
    version="15.1"
    start="nios2_gen2.irq"
-   end="RS232_0.interrupt_sender">
+   end="RS232.interrupt_sender">
   <parameter name="irqNumber">
    <type>int</type>
    <value>4</value>
@@ -16701,7 +16701,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <startModule>nios2_gen2</startModule>
   <startConnectionPoint>irq</startConnectionPoint>
-  <endModule>RS232_0</endModule>
+  <endModule>RS232</endModule>
   <endConnectionPoint>interrupt_sender</endConnectionPoint>
  </connection>
  <connection
@@ -17123,11 +17123,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>reset</endConnectionPoint>
  </connection>
  <connection
-   name="clk_50.clk_reset/RS232_0.reset"
+   name="clk_50.clk_reset/RS232.reset"
    kind="reset"
    version="15.1"
    start="clk_50.clk_reset"
-   end="RS232_0.reset">
+   end="RS232.reset">
   <parameter name="deviceFamily">
    <type>java.lang.String</type>
    <value>UNKNOWN</value>
@@ -17146,7 +17146,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <startModule>clk_50</startModule>
   <startConnectionPoint>clk_reset</startConnectionPoint>
-  <endModule>RS232_0</endModule>
+  <endModule>RS232</endModule>
   <endConnectionPoint>reset</endConnectionPoint>
  </connection>
  <connection
@@ -17474,11 +17474,11 @@ parameters are a RESULT of the module parameters. -->
   <endConnectionPoint>reset</endConnectionPoint>
  </connection>
  <connection
-   name="nios2_gen2.debug_reset_request/RS232_0.reset"
+   name="nios2_gen2.debug_reset_request/RS232.reset"
    kind="reset"
    version="15.1"
    start="nios2_gen2.debug_reset_request"
-   end="RS232_0.reset">
+   end="RS232.reset">
   <parameter name="deviceFamily">
    <type>java.lang.String</type>
    <value>UNKNOWN</value>
@@ -17497,7 +17497,7 @@ parameters are a RESULT of the module parameters. -->
   </parameter>
   <startModule>nios2_gen2</startModule>
   <startConnectionPoint>debug_reset_request</startConnectionPoint>
-  <endModule>RS232_0</endModule>
+  <endModule>RS232</endModule>
   <endConnectionPoint>reset</endConnectionPoint>
  </connection>
  <connection

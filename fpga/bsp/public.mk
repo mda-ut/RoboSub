@@ -84,13 +84,9 @@ ACDS_VERSION := 15.1
 # used to generate this makefile. 
 # BUILD_NUMBER: 185
 
-# Quartus Generated JDI File. Required for resolving node instance ID's with 
-# design component names. 
-JDI_FILE := $(ABS_BSP_ROOT_DIR)/../fpga_hw/top_level/DE0_Nano.jdi
-
 # Qsys--generated SOPCINFO file. Required for resolving node instance ID's with 
 # design component names. 
-SOPCINFO_FILE := $(ABS_BSP_ROOT_DIR)/../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo
+SOPCINFO_FILE := $(ABS_BSP_ROOT_DIR)/../fpga_hw/top_level/nios_to_periph_sys.sopcinfo
 
 # Big-Endian operation. 
 # setting BIG_ENDIAN is false
@@ -117,8 +113,8 @@ BSP_TYPE := hal
 # setting CDX is false
 
 # CPU Name 
-# setting CPU_NAME is nios2_gen2_0
-CPU_NAME = nios2_gen2_0
+# setting CPU_NAME is nios2_gen2
+CPU_NAME = nios2_gen2
 ELF_PATCH_FLAG  += --cpu_name $(CPU_NAME)
 
 # Hardware Divider present. 
@@ -143,27 +139,27 @@ QSYS := 1
 ELF_PATCH_FLAG += --qsys true
 
 # Design Name 
-# setting SOPC_NAME is DE0_Nano_SOPC
-SOPC_NAME := DE0_Nano_SOPC
+# setting SOPC_NAME is nios_to_periph_sys
+SOPC_NAME := nios_to_periph_sys
 
 # SopcBuilder Simulation Enabled 
 # setting SOPC_SIMULATION_ENABLED is false
 ELF_PATCH_FLAG  += --simulation_enabled false
 
 # The SOPC System ID 
-# setting SOPC_SYSID is 0
-SOPC_SYSID_FLAG += --id=0
-ELF_PATCH_FLAG  += --id 0
+# setting SOPC_SYSID is 3735928559
+SOPC_SYSID_FLAG += --id=3735928559
+ELF_PATCH_FLAG  += --id 3735928559
 
 # The SOPC System ID Base Address 
-# setting SOPC_SYSID_BASE_ADDRESS is 0x30
-SOPC_SYSID_FLAG += --sidp=0x30
-ELF_PATCH_FLAG  += --sidp 0x30
+# setting SOPC_SYSID_BASE_ADDRESS is 0x101110
+SOPC_SYSID_FLAG += --sidp=0x101110
+ELF_PATCH_FLAG  += --sidp 0x101110
 
 # The SOPC Timestamp 
-# setting SOPC_TIMESTAMP is 1462492895
-SOPC_SYSID_FLAG += --timestamp=1462492895
-ELF_PATCH_FLAG  += --timestamp 1462492895
+# setting SOPC_TIMESTAMP is 1463559396
+SOPC_SYSID_FLAG += --timestamp=1463559396
+ELF_PATCH_FLAG  += --timestamp 1463559396
 
 # Enable JTAG UART driver to recover when host is inactive causing buffer to 
 # full without returning error. Printf will not fail with this recovery. none 

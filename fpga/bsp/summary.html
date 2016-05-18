@@ -7,13 +7,13 @@
 <td width="20%" bgcolor="#77BBFF">BSP Type:</td><td>hal</td>
 </tr>
 <tr mode="wrap">
-<td width="20%" bgcolor="#77BBFF">SOPC Design File:</td><td>../fpga_hw/top_level/DE0_Nano_SOPC.sopcinfo</td>
+<td width="20%" bgcolor="#77BBFF">SOPC Design File:</td><td>../fpga_hw/top_level/nios_to_periph_sys.sopcinfo</td>
 </tr>
 <tr mode="wrap">
 <td width="20%" bgcolor="#77BBFF">Quartus JDI File:</td><td>default</td>
 </tr>
 <tr mode="wrap">
-<td width="20%" bgcolor="#77BBFF">CPU:</td><td>nios2_gen2_0</td>
+<td width="20%" bgcolor="#77BBFF">CPU:</td><td>nios2_gen2</td>
 </tr>
 <tr mode="wrap">
 <td width="20%" bgcolor="#77BBFF">BSP Settings File:</td><td>./bsp/settings.bsp</td>
@@ -22,10 +22,10 @@
 <td width="20%" bgcolor="#77BBFF">BSP Version:</td><td>default</td>
 </tr>
 <tr mode="wrap">
-<td width="20%" bgcolor="#77BBFF">BSP Generated On:</td><td>5-May-2016 8:20:54 PM</td>
+<td width="20%" bgcolor="#77BBFF">BSP Generated On:</td><td>18-May-2016 1:28:09 AM</td>
 </tr>
 <tr mode="wrap">
-<td width="20%" bgcolor="#77BBFF">BSP Generated Timestamp:</td><td>1462494054541</td>
+<td width="20%" bgcolor="#77BBFF">BSP Generated Timestamp:</td><td>1463560089919</td>
 </tr>
 <tr mode="wrap">
 <td width="20%" bgcolor="#77BBFF">BSP Generated Location:</td><td>./</td>
@@ -38,37 +38,37 @@
 <th align="left" width="20%">Slave Descriptor</th><th align="left" width="40%">Address Range</th><th align="left" width="20%">Size</th><th align="left" width="20%">Attributes</th>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>power_management_slave_0</td><td>0x011010B4 - 0x011010B7</td><td>4</td><td class="listing">&nbsp;</td>
+<td>mda_pwr_mgmt</td><td>0x00101128 - 0x0010112B</td><td>4</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>adc_controller_0</td><td>0x011010B0 - 0x011010B3</td><td>4</td><td class="listing">&nbsp;</td>
+<td>jtag_uart</td><td>0x00101120 - 0x00101127</td><td>8</td><td class="listing">printable</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>jtag_uart</td><td>0x011010A8 - 0x011010AF</td><td>8</td><td class="listing">printable</td>
+<td>RS232</td><td>0x00101118 - 0x0010111F</td><td>8</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>RS232_0</td><td>0x011010A0 - 0x011010A7</td><td>8</td><td class="listing">&nbsp;</td>
+<td>sysid</td><td>0x00101110 - 0x00101117</td><td>8</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>controller_interrupt_counter</td><td>0x01101080 - 0x0110109F</td><td>32</td><td class="listing">timer</td>
+<td>key</td><td>0x00101100 - 0x0010110F</td><td>16</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>motor_controller_0</td><td>0x01101000 - 0x0110107F</td><td>128</td><td class="listing">&nbsp;</td>
+<td>sw</td><td>0x001010F0 - 0x001010FF</td><td>16</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>onchip_memory2_0</td><td>0x01080000 - 0x010C0FB1</td><td>266162</td><td class="listing">memory</td>
+<td>led</td><td>0x001010E0 - 0x001010EF</td><td>16</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>sysid</td><td>0x00000030 - 0x00000037</td><td>8</td><td class="listing">&nbsp;</td>
+<td>nios_timer</td><td>0x001010C0 - 0x001010DF</td><td>32</td><td class="listing">timer</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>key</td><td>0x00000020 - 0x0000002F</td><td>16</td><td class="listing">&nbsp;</td>
+<td>mda_adc</td><td>0x00101080 - 0x001010BF</td><td>64</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>led</td><td>0x00000010 - 0x0000001F</td><td>16</td><td class="listing">&nbsp;</td>
+<td>mda_motor_control</td><td>0x00101000 - 0x0010107F</td><td>128</td><td class="listing">&nbsp;</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>sw</td><td>0x00000000 - 0x0000000F</td><td>16</td><td class="listing">&nbsp;</td>
+<td>onchip_memory2</td><td>0x00080000 - 0x000C0FB1</td><td>266162</td><td class="listing">memory</td>
 </tr>
 </table>
 <br>
@@ -87,22 +87,22 @@
 <th align="left" width="50%">Section</th><th align="left" width="50%">Region</th>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.text</td><td>onchip_memory2_0</td>
+<td>.text</td><td>onchip_memory2</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.rodata</td><td>onchip_memory2_0</td>
+<td>.rodata</td><td>onchip_memory2</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.rwdata</td><td>onchip_memory2_0</td>
+<td>.rwdata</td><td>onchip_memory2</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.bss</td><td>onchip_memory2_0</td>
+<td>.bss</td><td>onchip_memory2</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.heap</td><td>onchip_memory2_0</td>
+<td>.heap</td><td>onchip_memory2</td>
 </tr>
 <tr mode="wrap" STYLE="display: 'block'; font-family: 'courier'; color: '#000000'; font-weight: '500'; font-size: '14'; margin-top: '10pt'; text-align: 'left'">
-<td>.stack</td><td>onchip_memory2_0</td>
+<td>.stack</td><td>onchip_memory2</td>
 </tr>
 </table>
 <h3>Settings</h3>
@@ -711,7 +711,7 @@
 <td width="20%">Default Value:</td><td>none</td>
 </tr>
 <tr>
-<td width="20%">Value:</td><td>onchip_memory2_0</td>
+<td width="20%">Value:</td><td>onchip_memory2</td>
 </tr>
 <tr>
 <td width="20%">Type:</td><td>UnquotedString</td>
@@ -765,7 +765,7 @@
 <td width="20%">Default Value:</td><td>none</td>
 </tr>
 <tr>
-<td width="20%">Value:</td><td>onchip_memory2_0</td>
+<td width="20%">Value:</td><td>onchip_memory2</td>
 </tr>
 <tr>
 <td width="20%">Type:</td><td>UnquotedString</td>
@@ -2034,7 +2034,7 @@
 <td width="20%">Default Value:</td><td>none</td>
 </tr>
 <tr>
-<td width="20%">Value:</td><td>controller_interrupt_counter</td>
+<td width="20%">Value:</td><td>nios_timer</td>
 </tr>
 <tr>
 <td width="20%">Type:</td><td>UnquotedString</td>
