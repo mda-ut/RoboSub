@@ -1,168 +1,203 @@
-module mda_adc_controller  (   
-	iRST,
-	iCLK,
-	iCLK_n,
-	iGO,
+module mda_adc_controller(
+	clk, // max 40mhz
 	
+	// start measure
+	measure_start, // posedge triggle
+	measure_ch,
+	measure_done,
+	measure_dataread,
 	
-	oDIN,
-	oCS,
-	oSCLK,
-	iDOUT,
-	
-	oADC_12_bit_channel_0,
-	oADC_12_bit_channel_1,
-	oADC_12_bit_channel_2,
-	oADC_12_bit_channel_3,
-	oADC_12_bit_channel_4,
-	oADC_12_bit_channel_5,
-	oADC_12_bit_channel_6,
-	oADC_12_bit_channel_7
-	);
-		
-	input            iRST;
-	input            iCLK;
-	input            iCLK_n;
-	input          iGO;
-	
-	output            oDIN;
-	output            oCS;
-	output            oSCLK;
-	input            iDOUT;
-	
-	output  reg [11:0]    oADC_12_bit_channel_0;
-	output  reg [11:0]    oADC_12_bit_channel_1;
-	output  reg [11:0]    oADC_12_bit_channel_2;
-	output  reg [11:0]    oADC_12_bit_channel_3;
-	output  reg [11:0]    oADC_12_bit_channel_4;
-	output  reg [11:0]    oADC_12_bit_channel_5;
-	output  reg [11:0]    oADC_12_bit_channel_6;
-	output  reg [11:0]    oADC_12_bit_channel_7;
-	
-	reg     [2:0]    channel;
-	reg               data;
-	reg               go_en;
-	reg               sclk;
-	reg      [3:0]      cont;
-	reg      [3:0]      m_cont;
-	reg      [11:0]   adc_data;
-	reg      [31:0]   adc_counter;
-	
-	assign   oCS      =   go_en;
-	assign   oSCLK      =   (go_en)? iCLK:1;
-	assign   oDIN      =   data;
-	
-	always@( iCLK )//posedge iGO or posedge iRST)
+	// adc interface
+	ADC_CONVST,
+	ADC_SCK,
+	ADC_SDI,
+	ADC_SDO 
+);
+
+input								clk;
+
+// start measure
+input								measure_start;
+input		[2:0]					measure_ch;
+output	reg					measure_done;
+output	[11:0]				measure_dataread;
+
+
+
+output		          		ADC_CONVST;
+output		          		ADC_SCK;
+output	reg          		ADC_SDI;
+input 		          		ADC_SDO;
+
+
+/////////////////////////////////
+// Timing definition 
+
+// using 40MHz clock
+// to acheive fsample = 500KHz
+// ntcyc = 2us / 25ns  = 80
+
+
+
+`define DATA_BITS_NUM		12
+`define CMD_BITS_NUM			6
+`define CH_NUM					8
+
+`define tWHCONV            3   // CONVST High Time, min 20 ns
+`define tCONV     			64 //52  // tCONV: type 1.3 us, MAX 1.6 us, 1600/25(assumed clk is 40mhz)=64  -> 1.3us/25ns = 52
+                              // set 64 for suite for 1.6 us max
+//                         +12 //data
+
+`define tHCONVST           320 // 12  // here set 320（ fsample = 100KHz） for if ADC input impedance is high, see below  
+                                // If the source impedance of the driving circuit is low, the ADC inputs can be driven directly.
+                                //Otherwise, more acquisition time should be allowed for a source with higher impedance.
+
+										  // for acheiving 500KHz  fmax. set n cyc = 80.
+`define tCONVST_HIGH_START	0 	
+`define tCONVST_HIGH_END  	(`tCONVST_HIGH_START+`tWHCONV) 
+
+`define tCONFIG_START		(`tCONVST_HIGH_END) 	
+`define tCONFIG_END  		(`tCLK_START+`CMD_BITS_NUM - 1) 	
+
+`define tCLK_START 			(`tCONVST_HIGH_START+`tCONV)
+`define tCLK_END 	   		(`tCLK_START+`DATA_BITS_NUM)
+
+`define tDONE 	   			(`tCLK_END+`tHCONVST)
+
+// create triggle message: reset_n
+reg pre_measure_start;
+always @ (posedge clk)	
+begin
+	pre_measure_start <= measure_start;
+end
+
+wire reset_n;
+assign reset_n = (~pre_measure_start & measure_start)?1'b0:1'b1;
+
+// tick
+reg [15:0] tick;	
+always @ (posedge clk or negedge reset_n)	
+begin
+	if (~reset_n)
+		tick <= 0;
+	else if (tick < `tDONE)
+		tick <= tick + 1;
+end
+
+
+/////////////////////////////////
+// ADC_CONVST 
+assign ADC_CONVST = (tick >= `tCONVST_HIGH_START && tick < `tCONVST_HIGH_END)?1'b1:1'b0;
+
+/////////////////////////////////
+// ADC_SCK 
+
+reg clk_enable; // must sync to clk in clk low
+always @ (negedge clk or negedge reset_n)	 
+begin
+	if (~reset_n)
+		clk_enable <= 1'b0;
+	else if ((tick >= `tCLK_START && tick < `tCLK_END))
+		clk_enable <= 1'b1;
+	else
+		clk_enable <= 1'b0;
+end
+
+assign ADC_SCK = clk_enable?clk:1'b0;
+
+
+///////////////////////////////
+// read data
+reg [(`DATA_BITS_NUM-1):0] read_data;
+reg [3:0] write_pos;
+
+
+
+assign measure_dataread = read_data;
+
+always @ (negedge clk or negedge reset_n)	
+begin
+	if (~reset_n)
 	begin
-		if(iRST)
-			go_en   <=   0;
-		else
-		begin
-			if(iGO)
-				go_en   <=   1;
-		end
+		read_data <= 0;
+		write_pos <= `DATA_BITS_NUM-1;
 	end
-	
-	always@(posedge iCLK or negedge go_en)
+	else if (clk_enable)
 	begin
-		if(!go_en)
-			cont   <=   0;
-		else
-		begin
-			if(iCLK)
-				cont   <=   cont + 1;
-		end
+		read_data[write_pos] <= ADC_SDO;
+		write_pos <= write_pos - 1;
 	end
-	
-	always@(posedge iCLK_n)
+end
+
+///////////////////////////////
+// measure done
+wire read_ch_done;
+
+assign read_ch_done = (tick == `tDONE)?1'b1:1'b0;
+
+always @ (posedge clk or negedge reset_n)	
+begin
+	if (~reset_n)
+		measure_done <= 1'b0;
+	else if (read_ch_done)
+		measure_done <= 1'b1;
+end
+
+///////////////////////////////
+// adc channel config
+
+// pre-build config command
+reg [(`CMD_BITS_NUM-1):0] config_cmd;
+
+
+`define UNI_MODE		1'b1   //1: Unipolar, 0:Bipolar
+`define SLP_MODE		1'b0   //1: enable sleep
+
+always @(negedge reset_n)
+begin
+	if (~reset_n)
 	begin
-		if(iCLK_n)
-			m_cont   <=   cont;
+		case (measure_ch)
+			0 : config_cmd <= {4'h8, `UNI_MODE, `SLP_MODE}; 
+			1 : config_cmd <= {4'hC, `UNI_MODE, `SLP_MODE}; 
+			2 : config_cmd <= {4'h9, `UNI_MODE, `SLP_MODE}; 
+			3 : config_cmd <= {4'hD, `UNI_MODE, `SLP_MODE}; 
+			4 : config_cmd <= {4'hA, `UNI_MODE, `SLP_MODE}; 
+			5 : config_cmd <= {4'hE, `UNI_MODE, `SLP_MODE}; 
+			6 : config_cmd <= {4'hB, `UNI_MODE, `SLP_MODE}; 
+			7 : config_cmd <= {4'hF, `UNI_MODE, `SLP_MODE}; 
+			default : config_cmd <= {4'hF, 2'b00}; 
+		endcase
 	end
-	
-	always@(posedge iCLK_n or negedge go_en)
+end
+
+// serial config command to adc chip
+wire config_init;
+wire config_enable;
+wire config_done;
+reg [2:0] sdi_index;
+
+assign config_init = (tick == `tCONFIG_START)?1'b1:1'b0;	
+assign config_enable = (tick > `tCLK_START && tick <= `tCONFIG_END)?1'b1:1'b0;	// > because this is negative edge triggle
+assign config_done = (tick > `tCONFIG_END)?1'b1:1'b0;	
+always @(negedge clk)	
+begin
+	if (config_init)
 	begin
-		if(!go_en)
-			data   <=   0;
-		else
-		begin
-			if(iCLK_n)
-			begin
-				if (cont == 2)
-					data   <=   channel[2];
-				else if (cont == 3)
-					data   <=   channel[1];
-				else if (cont == 4)
-					data   <=   channel[0];
-				else
-					data   <=   0;
-			end
-		end
+		ADC_SDI <= config_cmd[`CMD_BITS_NUM-1];
+		sdi_index <= `CMD_BITS_NUM-2;
 	end
-	
-	always@(posedge iCLK or negedge go_en)
+	else if (config_enable)
 	begin
-		if(!go_en)
-		begin
-			adc_data   <=   0;
-		end
-		else
-		if(iCLK)
-			begin
-				if (m_cont == 4)
-					adc_data[11]   <=   iDOUT;
-				else if (m_cont == 5)
-					adc_data[10]   <=   iDOUT;
-				else if (m_cont == 6)
-					adc_data[9]      <=   iDOUT;
-				else if (m_cont == 7)
-					adc_data[8]      <=   iDOUT;
-				else if (m_cont == 8)
-					adc_data[7]      <=   iDOUT;
-				else if (m_cont == 9)
-					adc_data[6]      <=   iDOUT;
-				else if (m_cont == 10)
-					adc_data[5]      <=   iDOUT;
-				else if (m_cont == 11)
-					adc_data[4]      <=   iDOUT;
-				else if (m_cont == 12)
-					adc_data[3]      <=   iDOUT;
-				else if (m_cont == 13)
-					adc_data[2]      <=   iDOUT;
-				else if (m_cont == 14)
-					adc_data[1]      <=   iDOUT;
-				else if (m_cont == 15)
-					adc_data[0]      <=   iDOUT;
-				else if (m_cont == 1)
-					begin                  
-						if ( adc_counter < 32'd20 )
-						begin
-							adc_counter <= adc_counter + 1'b1;
-						end
-						else
-						begin         
-							if (channel == 3'd0)
-								oADC_12_bit_channel_0 <= adc_data;
-							else if (channel == 3'd1)
-								oADC_12_bit_channel_1 <= adc_data;
-							else if (channel == 3'd2)
-								oADC_12_bit_channel_2 <= adc_data;
-							else if (channel == 3'd3)
-								oADC_12_bit_channel_3 <= adc_data;
-							else if (channel == 3'd4)
-								oADC_12_bit_channel_4 <= adc_data;
-							else if (channel == 3'd5)
-								oADC_12_bit_channel_5 <= adc_data;
-							else if (channel == 3'd6)
-								oADC_12_bit_channel_6 <= adc_data;
-							else if (channel == 3'd7)
-								oADC_12_bit_channel_7 <= adc_data;
-						
-							adc_counter <= 32'd0;
-							channel <= channel + 1'b1;
-						end
-					end
-			end
+		ADC_SDI <= config_cmd[sdi_index];
+		sdi_index <= sdi_index - 1;
 	end
+	else if (config_done)
+		ADC_SDI <= 1'b0; //
+end
+
+
+
 
 endmodule
+

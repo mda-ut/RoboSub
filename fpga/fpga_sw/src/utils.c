@@ -139,6 +139,13 @@ void print_int(int i)
 void set_pow(int on_off)
 {
   IOWR(MDA_PWR_MGMT_BASE, 0, on_off);
+  if (on_off) {
+    usleep(5);
+    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x01);
+    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+    usleep(1);
+  } 
 }
 
 // set motor direction
@@ -209,7 +216,8 @@ int get_pwm_freq()
 // returns depth
 int get_depth()
 {
-  return IORD(MDA_ADC_BASE, 5);
+  return IORD(MDA_ADC_BASE, 0x01);
+  //return IORD(MDA_ADC_BASE, 5);
 }
 
 // returns a struct of x,y,z acceleration values

@@ -152,14 +152,6 @@
          type = "int";
       }
    }
-   element mda_adc.avalon_slave_0_1
-   {
-      datum baseAddress
-      {
-         value = "1052800";
-         type = "String";
-      }
-   }
    element mda_motor_control
    {
       datum _sortIndex
@@ -540,7 +532,7 @@
   <parameter name="dataAddrWidth" value="21" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='mda_adc.avalon_slave_0_1' start='0x101080' end='0x1010C0' type='mda_adc_wrapper.avalon_slave_0_1' /><slave name='nios_timer.s1' start='0x1010C0' end='0x1010E0' type='altera_avalon_timer.s1' /><slave name='led.s1' start='0x1010E0' end='0x1010F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010F0' end='0x101100' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x101100' end='0x101110' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x101110' end='0x101118' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232.avalon_slave_0' start='0x101118' end='0x101120' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x101120' end='0x101128' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x101128' end='0x10112C' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='mda_adc.adc_slave' start='0x0' end='0x20' type='mda_adc_wrapper.adc_slave' /><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='nios_timer.s1' start='0x1010C0' end='0x1010E0' type='altera_avalon_timer.s1' /><slave name='led.s1' start='0x1010E0' end='0x1010F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010F0' end='0x101100' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x101100' end='0x101110' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x101110' end='0x101118' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232.avalon_slave_0' start='0x101118' end='0x101120' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x101120' end='0x101128' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x101128' end='0x10112C' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -870,7 +862,7 @@
   <parameter name="gui_output_clock_frequency15" value="100.0" />
   <parameter name="gui_output_clock_frequency16" value="100.0" />
   <parameter name="gui_output_clock_frequency17" value="100.0" />
-  <parameter name="gui_output_clock_frequency2" value="2.0" />
+  <parameter name="gui_output_clock_frequency2" value="40.0" />
   <parameter name="gui_output_clock_frequency3" value="100.0" />
   <parameter name="gui_output_clock_frequency4" value="100.0" />
   <parameter name="gui_output_clock_frequency5" value="100.0" />
@@ -970,6 +962,15 @@
    kind="avalon"
    version="15.1"
    start="nios2_gen2.data_master"
+   end="mda_adc.adc_slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="15.1"
+   start="nios2_gen2.data_master"
    end="jtag_uart.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x00101120" />
@@ -1000,15 +1001,6 @@
    end="mda_pwr_mgmt.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x00101128" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="15.1"
-   start="nios2_gen2.data_master"
-   end="mda_adc.avalon_slave_0_1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1069,15 +1061,6 @@
    kind="avalon"
    version="15.1"
    start="nios2_gen2.data_master"
-   end="key.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101100" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="15.1"
-   start="nios2_gen2.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x001010f0" />
@@ -1099,6 +1082,15 @@
    end="nios_timer.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x001010c0" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="15.1"
+   start="nios2_gen2.data_master"
+   end="key.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00101100" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1184,6 +1176,11 @@
    kind="clock"
    version="15.1"
    start="pll.outclk0"
+   end="mda_adc.clock_sink" />
+ <connection
+   kind="clock"
+   version="15.1"
+   start="pll.outclk0"
    end="clock_cross_100_to_10.s0_clk" />
  <connection
    kind="clock"
@@ -1196,9 +1193,9 @@
    start="pll.outclk0"
    end="clock_cross_100_to_50.s0_clk" />
  <connection kind="clock" version="15.1" start="pll.outclk1" end="sysid.clk" />
- <connection kind="clock" version="15.1" start="pll.outclk1" end="key.clk" />
  <connection kind="clock" version="15.1" start="pll.outclk1" end="sw.clk" />
  <connection kind="clock" version="15.1" start="pll.outclk1" end="led.clk" />
+ <connection kind="clock" version="15.1" start="pll.outclk1" end="key.clk" />
  <connection
    kind="clock"
    version="15.1"
@@ -1208,7 +1205,7 @@
    kind="clock"
    version="15.1"
    start="pll.outclk2"
-   end="mda_adc.clock_sink" />
+   end="mda_adc.clock_sink_adc" />
  <connection
    kind="clock"
    version="15.1"
@@ -1347,66 +1344,6 @@
    version="15.1"
    start="nios2_gen2.debug_reset_request"
    end="nios2_gen2.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="pll.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="sysid.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="jtag_uart.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="key.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="sw.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="led.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="nios_timer.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="mda_motor_control.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="RS232.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="mda_pwr_mgmt.reset" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="onchip_memory2.reset1" />
- <connection
-   kind="reset"
-   version="15.1"
-   start="nios2_gen2.debug_reset_request"
-   end="mda_adc.reset_sink" />
  <connection
    kind="reset"
    version="15.1"

@@ -180,7 +180,6 @@ module MDA_DE0_Nano_SOC (
       .in_port_from_sw_export     (SW),     												//   in_port_from_sw.export
       .out_port_to_led_export     (),     												//   out_port_to_led.export
 
-      .mda_adc_sys_clock_50       (CLOCK_50),       									//           mda_adc.sys_clock_50
       .mda_adc_convst_out         (ADC_CONVST),         								//                  .convst_out
       .mda_adc_sck_out            (ADC_SDI),            								//                  .sck_out
       .mda_adc_sdi_out            (ADC_SCK),            								//                  .sdi_out

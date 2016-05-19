@@ -20,7 +20,7 @@ QSYSINFO_FILE=$(QSYS_PATH)$(QSYS_NAME)_generation.rpt
 QSYSINFO_FILE_DEPENDS=$(QSYS_FILE)
 
 PROJECT_SUBMODULE_FILES= mda_adc/*.v mda_common_modules/*.v mda_motor_control/*.v mda_power_management/*.v RS232/*.v
-SOURCE_FILES = $(PROJECT).v $(QSYSINFO_FILE) $(PROJECT_SUBMODULE_FILES)
+SOURCE_FILES = $(PROJECT).v $(PROJECT_SUBMODULE_FILES)
 ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 OUTPUT_FOLDER=output_files
 
@@ -59,7 +59,7 @@ EDA_ARGS = --read_settings_files=off --write_settings_files=off
 ###################################################################
 
 
-$(QSYSINFO_FILE): $(QSYSINFO_FILE_DEPENDS)
+$(QSYSINFO_FILE): $(QSYSINFO_FILE_DEPENDS) $(SOURCE_FILES)
 	qsys-generate $(QSYS_FILE) -bsf -od=$(QSYS_NAME) --family=$(FAMILY) --part=$(PART)
 	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_PATH) --family=$(FAMILY) --part=$(PART) || [$$? -eq 4]
 
