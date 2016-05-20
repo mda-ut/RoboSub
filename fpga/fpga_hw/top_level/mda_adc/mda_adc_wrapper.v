@@ -10,11 +10,11 @@ module mda_adc_wrapper (
 	  output wire        ADC_SDI,      //               .sdi_out
 	  input  wire        ADC_SDO,      //               .sdo_in
 	  input  wire        chipselect_n, //      adc_slave.chipselect_n
-	  input  wire [3:0]  addr,         //               .address
+	  input  wire 		   addr,         //               .address
 	  input  wire        read_n,       //               .read_n
-	  output wire [15:0] readdata,     //               .readdata
+	  output wire [31:0] readdata,     //               .readdata
 	  input  wire        write_n,      //               .write_n
-	  input  wire [15:0] writedata,    //               .writedata
+	  input  wire [31:0] writedata,    //               .writedata
 	  input  wire        adc_clk,      // clock_sink_adc.clk
 	  input  wire        slave_clk     //     clock_sink.clk
  );

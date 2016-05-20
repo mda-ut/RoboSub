@@ -62,6 +62,9 @@ output		          		ADC_SCK;
 output	            		ADC_SDI;
 input 		          		ADC_SDO;
 
+reg [11:0] 	adc_data = 12'b0,
+				slave_shift_reg = 12'b0,
+				slave_data = 12'b0;
 
 ////////////////////////////////////
 // avalon slave port
@@ -187,9 +190,7 @@ end
 wire adc_newdata;
 assign adc_newdata = (~pre_measure_done & measure_done & ~config_first)?1'b1:1'b0;
 
-reg [11:0] 	adc_data = 12'b0,
-				slave_shift_reg = 12'b0,
-				slave_data = 12'b0;
+
 
 always @ (posedge adc_clk or negedge adc_reset_n)
 begin

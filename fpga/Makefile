@@ -36,10 +36,10 @@ clean:
 
 # Handy make targets
 dl_hw:
-	nios2-configure-sof --directory $(FPGA_DIR) --device 2
+	nios2-configure-sof --directory $(FPGA_DIR)/output_files --device 2
 
 dl_sw:
-	nios2-download -r --go --directory $(SW_DIR) $(ELF_NAME)
+	nios2-download --go --directory $(SW_DIR) $(ELF_NAME)
 
 dl_both:
 	$(MAKE) dl_hw

@@ -32,7 +32,7 @@ OUTPUT_FOLDER=output_files
 # clean: remove output files and database
 ###################################################################
 
-all: $(OUTPUT_FOLDER)/$(PROJECT).asm.rpt $(OUTPUT_FOLDER)/$(PROJECT).sta.rpt 
+all: $(OUTPUT_FOLDER)/$(PROJECT).done 
 
 clean: #clean_sopc
 	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
@@ -61,10 +61,10 @@ EDA_ARGS = --read_settings_files=off --write_settings_files=off
 
 $(QSYSINFO_FILE): $(QSYSINFO_FILE_DEPENDS) $(SOURCE_FILES)
 	qsys-generate $(QSYS_FILE) -bsf -od=$(QSYS_NAME) --family=$(FAMILY) --part=$(PART)
-	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_PATH) --family=$(FAMILY) --part=$(PART) || [$$? -eq 4]
+	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_PATH) --family=$(FAMILY) --part=$(PART) #|| [$$? -eq 4]
 
 
-$(OUTPUT_FOLDER)/$(PROJECT).map.rpt: $(SOURCE_FILES) 
+$(OUTPUT_FOLDER)/$(PROJECT).map.rpt: $(SOURCE_FILES) $(QSYSINFO_FILE)
 	quartus_map $(MAP_ARGS) $(PROJECT) -c $(PROJECT)
 #quartus_map $(MAP_ARGS) -l $(SOPC_PATH) -l $(SOPC_SUBMODULES) $(PROJECT)
 
@@ -80,3 +80,9 @@ $(OUTPUT_FOLDER)/$(PROJECT).sta.rpt: $(OUTPUT_FOLDER)/$(PROJECT).fit.rpt
 $(OUTPUT_FOLDER)/$(PROJECT).eda.rpt: $(OUTPUT_FOLDER)/$(PROJECT).fit.rpt
 	quartus_eda $(EDA_ARGS) $(PROJECT) -c $(PROJECT)
 
+$(OUTPUT_FOLDER)/$(PROJECT).done: $(QSYSINFO_FILE) $(SOURCE_FILES)
+	quartus_map $(MAP_ARGS) $(PROJECT) -c $(PROJECT)
+	quartus_fit $(FIT_ARGS) $(PROJECT) -c $(PROJECT)
+	quartus_asm $(ASM_ARGS) $(PROJECT) -c $(PROJECT)
+	quartus_sta $(STA_ARGS) $(PROJECT) -c $(PROJECT)
+	quartus_eda $(EDA_ARGS) $(PROJECT) -c $(PROJECT)

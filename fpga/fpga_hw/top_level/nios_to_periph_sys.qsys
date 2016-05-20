@@ -21,7 +21,7 @@
    {
       datum baseAddress
       {
-         value = "1052952";
+         value = "1052888";
          type = "String";
       }
    }
@@ -108,7 +108,7 @@
    {
       datum baseAddress
       {
-         value = "1052960";
+         value = "1052896";
          type = "String";
       }
    }
@@ -124,7 +124,7 @@
    {
       datum baseAddress
       {
-         value = "1052928";
+         value = "1052832";
          type = "String";
       }
    }
@@ -140,7 +140,7 @@
    {
       datum baseAddress
       {
-         value = "1052896";
+         value = "1052848";
          type = "String";
       }
    }
@@ -150,6 +150,14 @@
       {
          value = "13";
          type = "int";
+      }
+   }
+   element mda_adc.adc_slave
+   {
+      datum baseAddress
+      {
+         value = "1052904";
+         type = "String";
       }
    }
    element mda_motor_control
@@ -180,7 +188,7 @@
    {
       datum baseAddress
       {
-         value = "1052968";
+         value = "1052912";
          type = "String";
       }
    }
@@ -225,7 +233,23 @@
       }
       datum baseAddress
       {
-         value = "1052864";
+         value = "1052800";
+         type = "String";
+      }
+   }
+   element nios_to_periph_sys
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element nios_to_periph_sys
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
          type = "String";
       }
    }
@@ -305,7 +329,7 @@
    {
       datum baseAddress
       {
-         value = "1052912";
+         value = "1052864";
          type = "String";
       }
    }
@@ -321,7 +345,7 @@
    {
       datum baseAddress
       {
-         value = "1052944";
+         value = "1052880";
          type = "String";
       }
    }
@@ -532,7 +556,7 @@
   <parameter name="dataAddrWidth" value="21" />
   <parameter name="dataMasterHighPerformanceAddrWidth" value="1" />
   <parameter name="dataMasterHighPerformanceMapParam" value="" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='mda_adc.adc_slave' start='0x0' end='0x20' type='mda_adc_wrapper.adc_slave' /><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='nios_timer.s1' start='0x1010C0' end='0x1010E0' type='altera_avalon_timer.s1' /><slave name='led.s1' start='0x1010E0' end='0x1010F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010F0' end='0x101100' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x101100' end='0x101110' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x101110' end='0x101118' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232.avalon_slave_0' start='0x101118' end='0x101120' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x101120' end='0x101128' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x101128' end='0x10112C' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='onchip_memory2.s1' start='0x80000' end='0xC0FB2' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x100800' end='0x101000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='mda_motor_control.avalon_slave_0' start='0x101000' end='0x101080' type='mda_motor_control_wrapper.avalon_slave_0' /><slave name='nios_timer.s1' start='0x101080' end='0x1010A0' type='altera_avalon_timer.s1' /><slave name='key.s1' start='0x1010A0' end='0x1010B0' type='altera_avalon_pio.s1' /><slave name='led.s1' start='0x1010B0' end='0x1010C0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x1010C0' end='0x1010D0' type='altera_avalon_pio.s1' /><slave name='sysid.control_slave' start='0x1010D0' end='0x1010D8' type='altera_avalon_sysid_qsys.control_slave' /><slave name='RS232.avalon_slave_0' start='0x1010D8' end='0x1010E0' type='RS232.avalon_slave_0' /><slave name='jtag_uart.avalon_jtag_slave' start='0x1010E0' end='0x1010E8' type='altera_avalon_jtag_uart.avalon_jtag_slave' /><slave name='mda_adc.adc_slave' start='0x1010E8' end='0x1010F0' type='mda_adc_wrapper.adc_slave' /><slave name='mda_pwr_mgmt.avalon_slave_0' start='0x1010F0' end='0x1010F4' type='mda_pwr_mgmt_wrapper.avalon_slave_0' /></address-map>]]></parameter>
   <parameter name="data_master_high_performance_paddr_base" value="0" />
   <parameter name="data_master_high_performance_paddr_size" value="0" />
   <parameter name="data_master_paddr_base" value="0" />
@@ -964,7 +988,7 @@
    start="nios2_gen2.data_master"
    end="mda_adc.adc_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="baseAddress" value="0x001010e8" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -973,7 +997,7 @@
    start="nios2_gen2.data_master"
    end="jtag_uart.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101120" />
+  <parameter name="baseAddress" value="0x001010e0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -991,7 +1015,7 @@
    start="nios2_gen2.data_master"
    end="RS232.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101118" />
+  <parameter name="baseAddress" value="0x001010d8" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1000,7 +1024,7 @@
    start="nios2_gen2.data_master"
    end="mda_pwr_mgmt.avalon_slave_0">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101128" />
+  <parameter name="baseAddress" value="0x001010f0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1009,7 +1033,7 @@
    start="nios2_gen2.data_master"
    end="sysid.control_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101110" />
+  <parameter name="baseAddress" value="0x001010d0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1063,7 +1087,7 @@
    start="nios2_gen2.data_master"
    end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x001010f0" />
+  <parameter name="baseAddress" value="0x001010c0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1072,7 +1096,7 @@
    start="nios2_gen2.data_master"
    end="led.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x001010e0" />
+  <parameter name="baseAddress" value="0x001010b0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1081,7 +1105,7 @@
    start="nios2_gen2.data_master"
    end="nios_timer.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x001010c0" />
+  <parameter name="baseAddress" value="0x00101080" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1090,7 +1114,7 @@
    start="nios2_gen2.data_master"
    end="key.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00101100" />
+  <parameter name="baseAddress" value="0x001010a0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
