@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/verbosity_pkg.sv"
+   type="SYSTEM_VERILOG"
+   library="altera_common_sv_packages"
+   systemVerilogPackageName="avalon_vip_verbosity_pkg" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0009.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_sw_external_connection_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0008.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_power_management_slave_0_conduit_end_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0007.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_pll_0_locked_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0006.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_motor_controller_0_conduit_end_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0005.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_led_external_connection_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0004.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_key_external_connection_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_avalon_reset_source.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_clk_50_clk_in_reset_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_avalon_clock_source.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_clk_50_clk_in_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0003.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_adc_controller_0_conduit_end_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm_0002.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_RS232_0_conduit_end_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/altera_conduit_bfm.sv"
+   type="SYSTEM_VERILOG"
+   library="DE0_Nano_SOPC_inst_RS232_0_conduit_end_1_bfm" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/submodules/DE0_Nano_SOPC.v"
+   type="VERILOG"
+   library="DE0_Nano_SOPC_inst" />
+ <file
+   path="testbench/DE0_Nano_SOPC_tb/simulation/DE0_Nano_SOPC_tb.v"
+   type="VERILOG" />
+ <topLevel name="DE0_Nano_SOPC_tb" />
+ <deviceFamily name="cyclonev" />
+ <modelMap
+   controllerPath="DE0_Nano_SOPC_tb.DE0_Nano_SOPC_inst.onchip_memory2_0"
+   modelPath="DE0_Nano_SOPC_tb.DE0_Nano_SOPC_inst.onchip_memory2_0" />
+</simPackage>

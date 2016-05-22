@@ -1,0 +1,31 @@
+# => ignore all files.
+#*
+
+# => ignore file by extension.
+#.gitignore
+*.rpt
+*.qdf
+*.done
+*.dpf
+*.summary
+*.pin
+*.pof
+#*.qpf
+#*.qsf
+*.qws
+*.sof
+*.smsg
+*.txt
+*.bak
+**/db/
+**/incremental_db/
+**/simulation/
+**/.qsys_edit/
+nios_to_periph_sys/
+fpga/fpga_sw/obj/
+fpga/bsp/obj/
+
+# => excludes *.sof from ignoring.
+#!*.sof
+!*.qpf
+!*.qsf

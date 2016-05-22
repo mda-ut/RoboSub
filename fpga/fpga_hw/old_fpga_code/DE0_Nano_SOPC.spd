@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file path="simulation/DE0_Nano_SOPC.v" type="VERILOG" />
+ <topLevel name="DE0_Nano_SOPC" />
+ <deviceFamily name="cyclonev" />
+ <modelMap
+   controllerPath="DE0_Nano_SOPC.onchip_memory2_0"
+   modelPath="DE0_Nano_SOPC.onchip_memory2_0" />
+</simPackage>
