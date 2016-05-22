@@ -232,7 +232,7 @@ void calculate_pid()
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
    //subgroup A: 						
-   double m_left, m_right, m_back_left, m_back_right; // back left and back right are not used for Tempest
+   double m_front_left, m_front_right, m_back_left, m_back_right; // back left and back right are not used for Tempest
    //subgroup B:
    double mp_front_left, mp_front_right, mp_back_left, mp_back_right; //mp = motor perpendicular
    
@@ -241,8 +241,8 @@ void calculate_pid()
       0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_left //we might change hard-coded 0.5 ratio later
       -0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_right
       0, 0, // since back left and back right are not used
-	&m_left, //assumptions: polarity of motors: + pointed towards front O-ring
-	&m_right, //positive yaw is left turn
+	&m_front_left, //assumptions: polarity of motors: + pointed towards front O-ring
+	&m_front_right, //positive yaw is left turn
       	NULL, //&m_back_left//positive foward is forward
       	NULL //&m_back_right //most importantly, assume motors work like rudders kicking backwards
    );
@@ -271,8 +271,8 @@ void calculate_pid()
       	&mp_back_right //positive pitch is nose dive
    );
 
-   M_FRONT_LEFT = (int)m_left;
-   M_FRONT_RIGHT = (int)m_right;
+   M_FRONT_LEFT = (int)m_front_left;
+   M_FRONT_RIGHT = (int)m_front_right;
    //M_BACK_LEFT = (int)m_back_left;
    //M_BACK_RIGHT = (int)m_back_right;
    MP_FRONT_LEFT = (int)mp_front_left;
