@@ -8,7 +8,7 @@
 #define TIMER_RATE_IN_HZ 20
 #define NUM_DEPTH_VALUES 64 /* Ensure this is a power of 2 for better performance */
 
-#define NUM_MOTORS 8
+#define NUM_MOTORS 6
 #define STR_LEN 127
 #define RAD_TO_DEG 57.3  /* 180/PI */
 #define MOTOR_CONTROLLER_0_DUTY_CYCLE (MOTOR_CONTROLLER_0_BASE + 32)
