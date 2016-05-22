@@ -15,7 +15,7 @@ module MDA_DE0_Nano_SOC (
 	//////////// ADC //////////
 	ADC_CONVST,
 	ADC_SDI,
-	ADC_SCK,
+	ADC_SCLK,
 	ADC_SDO,
 
 	//////////// GPIO_0, GPIO_0 connect to GPIO Default //////////
@@ -50,7 +50,7 @@ module MDA_DE0_Nano_SOC (
 	//////////// ADC //////////
 	output		          		ADC_CONVST;
 	output		          		ADC_SDI;
-	output		          		ADC_SCK;
+	output		          		ADC_SCLK;
 	input 		          		ADC_SDO;
 
 	//////////// GPIO_0, GPIO_0 connect to GPIO Default //////////
@@ -181,8 +181,8 @@ module MDA_DE0_Nano_SOC (
       .out_port_to_led_export     (),     												//   out_port_to_led.export
 
       .mda_adc_convst_out         (ADC_CONVST),         								//                  .convst_out
-      .mda_adc_sck_out            (ADC_SDI),            								//                  .sck_out
-      .mda_adc_sdi_out            (ADC_SCK),            								//                  .sdi_out
+      .mda_adc_sck_out            (ADC_SCLK),            								//                  .sck_out
+      .mda_adc_sdi_out            (ADC_SDI),            								//                  .sdi_out
       .mda_adc_sdo_in             (ADC_SDO),            							   //                  .sdo_in
 
       .mda_motor_control_gpio_out ({hb1, hb2, hb3, hb4, hb5, hb6, hb7, hb8}), // mda_motor_control.gpio_out

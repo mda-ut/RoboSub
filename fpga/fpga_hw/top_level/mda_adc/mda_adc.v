@@ -36,7 +36,7 @@ module mda_adc (
 	 slave_write_n,
 	 slave_readdata,
 	 slave_writedata,
-	 adc_clk,
+	 adc_clk, //Max 40MHz
 	 ADC_CONVST,
 	 ADC_SCK,
 	 ADC_SDI,
@@ -62,9 +62,9 @@ output		          		ADC_SCK;
 output	            		ADC_SDI;
 input 		          		ADC_SDO;
 
-reg [11:0] 	adc_data = 12'b0,
-				slave_shift_reg = 12'b0,
-				slave_data = 12'b0;
+//reg [11:0] 	adc_data = 12'b0,
+//				slave_shift_reg = 12'b0,
+//				slave_data = 12'b0;
 
 ////////////////////////////////////
 // avalon slave port
@@ -102,7 +102,7 @@ begin
 	if (slave_read_status)   
 		slave_readdata <= {11'b0, measure_fifo_done};
 	else if (slave_read_data)   
-		slave_readdata <= slave_data;
+		slave_readdata <= fifo_q;
 end
 
 reg pre_slave_read_data;
@@ -149,7 +149,7 @@ begin
 		measure_fifo_done <= 1'b0;
 		wait_measure_done <= 1'b0;
 	end 
-	else if (~measure_start & ~wait_measure_done)
+	else if (~measure_fifo_done & ~measure_start & ~wait_measure_done)
 	begin
 		measure_start <= 1'b1;
 		wait_measure_done <= 1'b1;
@@ -162,13 +162,23 @@ begin
 			if (config_first)
 			begin
 				config_first <= 1'b0;
-				wait_measure_done <= 1'b0; //carl's edit
+				//wait_measure_done <= 1'b0; //carl's edit
 			end
 			else
 			begin	// read data and save into fifo
-				wait_measure_done <= 1'b0;
-				measure_fifo_done <= 1'b1;
+				
+				if (measure_count < measure_fifo_num) // && ~fifo_wrfull)
+				begin
+					measure_count <= measure_count + 1;
+					wait_measure_done <= 1'b0;
+				end
+				else
+					measure_fifo_done <= 1'b1;
 			end
+//			begin	// read data and save into fifo
+//				wait_measure_done <= 1'b0;
+//				measure_fifo_done <= 1'b1;
+//			end
 		end
 	end
 end
@@ -186,11 +196,11 @@ begin
 		pre_measure_done <= measure_done;
 end
 
+assign fifo_wrreq = (~pre_measure_done & measure_done & ~config_first)?1'b1:1'b0;
 
+/*
 wire adc_newdata;
 assign adc_newdata = (~pre_measure_done & measure_done & ~config_first)?1'b1:1'b0;
-
-
 
 always @ (posedge adc_clk or negedge adc_reset_n)
 begin
@@ -207,7 +217,7 @@ begin
 	slave_shift_reg <= adc_data;
 	slave_data <= slave_shift_reg;
 end
-	
+*/
 
 ///////////////////////////////////////
 // SPI
@@ -228,5 +238,27 @@ mda_adc_controller mda_adc_ctrl_inst(
 	.ADC_SDI(ADC_SDI),
 	.ADC_SDO(ADC_SDO) 
 );
+
+///////////////////////////////////////
+// FIFO
+wire fifo_wrfull;
+wire fifo_rdempty;
+wire  fifo_wrreq;
+wire [11:0]	 fifo_q;
+wire fifo_rdreq;
+
+adc_data_fifo adc_data_fifo_inst(
+	.aclr(~adc_reset_n),
+	.data(measure_dataread),
+	.rdclk(slave_clk),
+	.rdreq(fifo_rdreq),
+	.wrclk(adc_clk),
+	.wrreq(fifo_wrreq),
+	.q(fifo_q),
+	.rdempty(fifo_rdempty),
+	.wrfull(fifo_wrfull) 
+);	
+
+
 	
 endmodule

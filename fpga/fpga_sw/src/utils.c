@@ -139,13 +139,13 @@ void print_int(int i)
 void set_pow(int on_off)
 {
   IOWR(MDA_PWR_MGMT_BASE, 0, on_off);
-  if (on_off) {
-    usleep(5);
-    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
-    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x01);
-    IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
-    usleep(1);
-  } 
+  //if (on_off) {
+  //  usleep(5);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x01);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+  //  usleep(1);
+  //} 
 }
 
 // set motor direction
@@ -216,7 +216,37 @@ int get_pwm_freq()
 // returns depth
 int get_depth()
 {
-  return IORD(MDA_ADC_BASE, 0x01);
+  int nReadNum = 4;
+  int ch = 0x07;
+  int i, Value;
+  IOWR(MDA_ADC_BASE, 0x01, nReadNum);
+
+
+		// start measure
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x00);
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x01);
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x00);
+		usleep(1);
+
+		// wait measure done
+		while ((IORD(MDA_ADC_BASE,0x00) & 0x01) == 0x00);
+
+		// read adc value
+		for(i=0;i<nReadNum;i++){
+			Value = IORD(MDA_ADC_BASE, 0x01);
+			printf("CH%d=%.3fV (0x%04x)\r\n", ch, (float)Value/1000.0, Value);
+		}
+
+		return Value;
+/*
+  IOWR(MDA_ADC_BASE, 0x01, 1);
+
+  while ((IORD(MDA_ADC_BASE,0x00) & 0x01) == 0x00);
+
+  depth = IORD(MDA_ADC_BASE, 0x01);
+  printf("DEPTH = %d\n", depth);
+  return depth;
+  */
   //return IORD(MDA_ADC_BASE, 5);
 }
 
