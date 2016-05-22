@@ -40,8 +40,8 @@ struct orientation {
 
 #define M_FRONT_LEFT motor_duty_cycle[0]
 #define M_FRONT_RIGHT motor_duty_cycle[1]
-#define M_BACK_LEFT motor_duty_cycle[2]
-#define M_BACK_RIGHT motor_duty_cycle[3]
+#define M_BACK_LEFT motor_duty_cycle[2] // back left not used on Tempest
+#define M_BACK_RIGHT motor_duty_cycle[3] // back right not used on Tempest
 #define MP_FRONT_LEFT motor_duty_cycle[4]
 #define MP_FRONT_RIGHT motor_duty_cycle[5]
 #define MP_BACK_LEFT motor_duty_cycle[6]
