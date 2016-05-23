@@ -185,7 +185,7 @@ module MDA_DE0_Nano_SOC (
       .mda_adc_sdi_out            (ADC_SDI),            								//                  .sdi_out
       .mda_adc_sdo_in             (ADC_SDO),            							   //                  .sdo_in
 
-      .mda_motor_control_gpio_out ({hb1, hb2, hb3, hb4, hb5, hb6, hb7, hb8}), // mda_motor_control.gpio_out
+      .mda_motor_control_gpio_out ({hb8, hb7, hb6, hb5, hb4, hb3, hb2, hb1}), // mda_motor_control.gpio_out
 
       .rs232_uart_rxd_in          (!power || GPIO_0[14]),          				//             rs232.uart_rxd_in
       .rs232_uart_txd_out         (imu_in),          									//                  .uart_txd_out

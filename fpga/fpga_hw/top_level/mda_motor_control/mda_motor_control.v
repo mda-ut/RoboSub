@@ -1,17 +1,39 @@
-// This is the motor_controller for each H-bridge circuit
-// Direction and on/off can be specified, as well as duty cycle
+/////////////////////////////////////////////////////////////////////////
+// Module: mda_motor_control.v
+// i---------------------------------------------------------------------
+// Purpose: Top-Level module for a an instance of a motor controller.
+//			This is the motor controller for each H-Bridge circuit.
+//			Direction and on/off can be specified, as well as duty cycle
+// ---------------------------------------------------------------------
+// Version History:
+//
+// 2016/5/22 - 1.0: Copied legacy verilog and made modifications for Robosub
+//					2016 competition. Using new documentation convention.
+// Shai Bonen
+//////////////////////////////////////////////////////////////////////////
 
 `include "mda_motor_control_defines.v"
-
-
 module mda_motor_control (input clk, input on, input [15:0] period, input [15:0] duty_cycle, output [3:0] out);
-	
+	// Signal Usage:
+	//		- clk: clk for motor controller
+	//		- on: Specifies whether the motor should be on (1'b1) or off (1'b0)
+	//		- period: The pwm period in cycles. Operates @ CLOCK Freq = 
+	//		- duty_cycle: # of on cycles
+	//		- out: H-Bridge MOSFET states
 	wire motor_on, motor_dir;
 	
+	// PWM Generator Instantiation
 	mda_motor_control_pwm_gen pwm_generator (clk, on, period, duty_cycle, motor_dir, motor_on);
+	// Motor Controller Logics Instantiation
 	mda_motor_control_internal mi(clk, motor_dir, motor_on, out);
 
 endmodule
+
+
+/////////////////////////////////////////////////////////////////////////
+// Legacy Code Below
+/////////////////////////////////////////////////////////////////////////
+
 
 /*
 // The following is the old motor_controller decommissioned Mar. 26 2016.

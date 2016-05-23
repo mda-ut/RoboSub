@@ -49,6 +49,7 @@ struct command_struct my_cmds[] = {
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor positive or negative\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
+  {"tm", COMMAND_TEST_MOTOR, "tm\n Usage: tmf <n>\n\n Test motor n by making it go forward\n"}
 };
 
 // the size of the above array
@@ -78,7 +79,7 @@ void process_command(char *st)
 {
   // linearly search for the command from the table of commands
   enum COMMAND_ID cid = COMMAND_INVALID;
-  int i;
+  int i,j;
   for (i = 0; i < cmd_len; i++) {
     if (strncmp(st, my_cmds[i].name, strlen(my_cmds[i].name)) == 0) {
       cid = my_cmds[i].id;
@@ -95,6 +96,20 @@ void process_command(char *st)
   double P, I, D, Alpha;
 
   switch (cid) {
+	case COMMAND_TEST_MOTOR:
+      i = read_hex(st);
+	  if (i < 0 || i >= NUM_MOTORS) {
+		  printf("Motor # Enterred is Invalid\n");
+	  } else {
+		set_pwm_freq(20);
+    	printf("PWM frequency set to: 20kHz\n");
+    	for (j = 0; j < NUM_MOTORS; j++) {
+        	set_motor_duty_cycle(j, get_motor_duty_cycle(j));
+      	}
+		set_motor_duty_cycle(i,(int)(0.6 * 1024));
+		set_motor_dir(i, MOTOR_DIR_FORWARD);
+	  } 
+      break; 
     case COMMAND_INVALID:
       printf("Sorry, command %s is not recognized. For a list of valid commands, type 'h' for help\n", st);
       break;
