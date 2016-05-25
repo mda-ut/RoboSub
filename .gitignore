@@ -24,6 +24,9 @@
 nios_to_periph_sys/
 fpga/fpga_sw/obj/
 fpga/bsp/obj/
+*.o
+*.d
+*.a
 
 # => excludes *.sof from ignoring.
 #!*.sof
