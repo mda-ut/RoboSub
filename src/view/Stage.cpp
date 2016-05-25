@@ -22,10 +22,17 @@ void Stage::setViewContent(std::string type) {
         // Delete and disconnects all associated QWidgets and their respective signals and slots
         delete sub;
     }
-    sub = subFactory->makeSub(type);
-    sub->initialize();
-    stageLayout->addWidget(sub->getView());
-    this->show();
+    if (type == "SIMULATOR"){        
+        sub = subFactory->makeSub(type);
+        sub->initialize();
+        stageLayout->addWidget(sub->getView());
+        this->show();
+    }else{
+        sub = subFactory->makeSub(type);
+        sub->initialize();
+        stageLayout->addWidget(sub->getView());
+        this->show();
+    }
     logger->info("New View initialized");
 }
 

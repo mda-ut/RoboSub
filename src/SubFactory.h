@@ -11,6 +11,7 @@
 #include "Properties.h"
 #include "Logger.h"
 #include "Sub.h"
+#include "../Simulator/Sim.h"
 
 class Stage;
 

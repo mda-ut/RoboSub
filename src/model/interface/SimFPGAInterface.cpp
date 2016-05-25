@@ -20,9 +20,9 @@
 FPGAData* SimFPGAInterface::poll() {
     mutex.lock();
     //TODO Add error checking on values from FPGA
-    int power = simFPGA->get_power();
-    int depth = simFPGA->get_depth();
-    int yaw = simFPGA->get_yaw();
+    int power = 5;
+    int depth = 5;
+    int yaw = 4;
     mutex.unlock();
 
     return new FPGAData("raw", power, yaw, depth);
@@ -42,24 +42,27 @@ void SimFPGAInterface::set(Attributes attr, int value) {
     switch(attr) {
     case POWER:
         if (value == 0) {
-            simFPGA->power_off();
+            //simFPGA->power_off();
         } else if (value == 1) {
-            simFPGA->power_on();
+            //simFPGA->power_on();
         } else {
             logger->warn("Invalid power value of " + std::to_string(value));
         }
         break;
     case DEPTH:
-        simFPGA->set_target_depth(value);
+        //simFPGA->set_target_depth(value);
+        ih->setDepth(value);
         break;
     case YAW:
-        simFPGA->set_target_yaw(value);
+        //simFPGA->set_target_yaw(value);
+        ih->setRot(0, value, 0);
         break;
     case SPEED:
-        simFPGA->set_target_speed(value);
+        //simFPGA->set_target_speed(value);
+        ih->setTargetSpeed(value, 0, 0);
         break;
     case MOTOR:
-        simFPGA->startup_sequence();
+        //simFPGA->startup_sequence();
         break;
     default:
         logger->warn("Invalid FPGA attribute of " + std::to_string(attr));
@@ -74,8 +77,8 @@ void SimFPGAInterface::set(Attributes attr, int value) {
  */
 
 
-SimFPGAInterface::SimFPGAInterface(Properties* settings, SimFPGA* simFPGA) : FPGAInterface(settings) {
-    this->simFPGA = simFPGA;
+SimFPGAInterface::SimFPGAInterface(Properties* settings, InputHandler *ih) : FPGAInterface(settings) {
+    this->ih = ih;
 }
 
 void SimFPGAInterface::init() {
@@ -85,13 +88,13 @@ void SimFPGAInterface::init() {
     I = std::stod(settings->getProperty("SIM_DEPTH_I"));
     D = std::stod(settings->getProperty("SIM_DEPTH_D"));
     Alpha = std::stod(settings->getProperty("SIM_DEPTH_ALPHA"));
-    simFPGA->set_pid_depth(P, I, D, Alpha);
+    //simFPGA->set_pid_depth(P, I, D, Alpha);
 
     P = std::stod(settings->getProperty("SIM_YAW_P"));
     I = std::stod(settings->getProperty("SIM_YAW_I"));
     D = std::stod(settings->getProperty("SIM_YAW_D"));
     Alpha = std::stod(settings->getProperty("SIM_YAW_ALPHA"));
-    simFPGA->set_pid_yaw(P, I, D, Alpha);
+    //simFPGA->set_pid_yaw(P, I, D, Alpha);
 }
 
 SimFPGAInterface::~SimFPGAInterface() {
