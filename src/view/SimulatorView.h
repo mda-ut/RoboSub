@@ -4,12 +4,11 @@
 #include <QWindow>
 
 #include "Logger.h"
-#include "SimulatorEngine.h"
 #include "View.h"
 
 class SimulatorView : public View {
 public:
-    SimulatorView(Stage* stage, Controller* controller, std::vector<State*> states, SimulatedSub* simSub, SimulatedEnvironment* simEnv, Qt3D::QEntity* rootEntity);
+    SimulatorView(Stage* stage, Controller* controller, std::vector<State*> states);
     ~SimulatorView();
 
     virtual void initialize();
@@ -27,16 +26,9 @@ protected:
 private:
     Logger* logger = new Logger("SimulatorView");
 
-    SimulatorEngine* engine;
-    SimulatedSub* simSub;
-    SimulatedEnvironment* simEnv;
-    Qt3D::QEntity* rootEntity;
-
     QWidget* container;
     QWindow* window;
     QSurfaceFormat* format;
-
-    void makeQImage(cv::Mat imgData, QImage& imgHolder);
 
 public slots:
     void exit();

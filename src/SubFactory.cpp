@@ -17,9 +17,7 @@
 #include "GUIView.h"
 #include "CompetitionView.h"
 #include "Controller.h"
-#include "SimFPGA.h"
 #include "SimFPGAInterface.h"
-#include "SimBufferWindow.h"
 #include <vector>
 #include <iostream>
 
@@ -80,22 +78,22 @@ Sub* SubFactory::makeSub(std::string subType) {
         }
     } else if (subType == "SIMULATOR") {
         logger->trace("Creating simulation sub");
-        Qt3D::QEntity* rootEntity = new Qt3D::QEntity();
-        SimulatedSub* simSub = new SimulatedSub(rootEntity);
-        SimulatedEnvironment* simEnv = new SimulatedEnvironment(rootEntity);
 
         states.push_back(new CameraState(FRONTCAM, camBufferSize));
         states.push_back(new CameraState(DOWNCAM, camBufferSize));
         states.push_back(new FPGAState(FPGA, fpgaBufferSize));
 
-        SimFPGA* simFPGA = new SimFPGA(settings, simSub);
-        SimBufferWindow* bufferWindow = new SimBufferWindow(simSub, simEnv, rootEntity, settings);
+        InputHandler *ih = new InputHandler(true);
         int frontCamPos = std::stoi(settings->getProperty("FRONT_CAM"));
         int downCamPos = std::stoi(settings->getProperty("DOWN_CAM"));
+        cv::Mat *frontFrame = new cv::Mat(Sim::sizeY, Sim::sizeX, CV_8UC3);
+        cv::Mat *downFrame = new cv::Mat(Sim::sizeY, Sim::sizeX, CV_8UC3);
+        SimCam *frontSC = new SimCam(frontFrame, frontCamPos);
+        SimCam *downSC = new SimCam(downFrame, downCamPos);
 
-        HwInterface* frontCamInt = new SimCameraInterface(frontCamPos, bufferWindow);
-        HwInterface* downCamInt = new SimCameraInterface(downCamPos, bufferWindow);
-        HwInterface* fpgaInt = new SimFPGAInterface(settings, simFPGA);
+        HwInterface* frontCamInt = new SimCameraInterface(frontCamPos, frontSC);
+        HwInterface* downCamInt = new SimCameraInterface(downCamPos, downSC);
+        HwInterface* fpgaInt = new SimFPGAInterface(settings, ih);
 
         models.push_back(new CameraModel(states[0], frontCamInt, camPollFrequency));
         models.push_back(new CameraModel(states[1], downCamInt, camPollFrequency));
@@ -109,9 +107,30 @@ Sub* SubFactory::makeSub(std::string subType) {
         for (auto& state : states) {
             state->addViewer(view);
         }
+        dataCap *cap = new dataCap;
+        cap->frontSC = frontSC;
+        cap->downSc = downSC;
+        cap->ih = ih;
+        cap->runSim = (bool*) true;
+        cap->threadAlive = (bool*) true;
+        //Sim *sim = new Sim(cap);
 
+        class tempClass{
+        public:
+            static void* run(void* cap){
+                Sim sim(cap);
+                sim.start();
+                pthread_exit(NULL);
+            }
+        };
 
-        bufferWindow->initialize();
+        pthread_t thread;
+        int rc = pthread_create(&thread, NULL, tempClass::run, (void*)cap);
+        if (rc)
+            logger->error("Couldnt create thread");
+        else
+            logger->trace("Created thread");
+
     } else if (subType == "AUTONOMOUS") {
         logger->trace("Creating autonomous sub");
         states.push_back(new CameraState(FRONTCAM, camBufferSize));

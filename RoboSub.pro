@@ -6,6 +6,8 @@ LIBS += -L/usr/local/lib \
 -lopencv_videoio \
 -lopencv_imgcodecs
 
+LIBS += -L$$PWD/Simulator/irrlicht-1.8.3/lib/Linux/ -lIrrlicht -lGLU -lGL -lXrandr -lXext -lX11
+
 CONFIG += c++11
 greaterThan(QT_MAJOR_VERSION,4): QT += widgets 3dcore 3drenderer 3dinput
 
@@ -33,6 +35,8 @@ INCLUDEPATH += . \
                test/util/data \
                /usr/local/include/opencv
 
+INCLUDEPATH += $$PWD/Simulator/irrlicht-1.8.3/lib/Linux $$PWD/Simulator/irrlicht-1.8.3/include
+unix:!macx: PRE_TARGETDEPS += $$PWD/Simulator/irrlicht-1.8.3/lib/Linux/libIrrlicht.a
 
 OTHER_FILES += src/settings/*
 config.path =$${OUT_PWD}/settings
@@ -101,20 +105,21 @@ HEADERS += \
     src/view/GUIView.h \
     src/view/SimulatorView.h \
     src/model/interface/SimFPGAInterface.h \
-    src/simulator/SimFPGA.h \
-    src/simulator/SimulatedEnvironment.h \
-    src/simulator/SimulatorEngine.h \
-    src/simulator/SimulatedSub.h \
-    src/simulator/PIDController.h \
     src/controller/task/PortalTask.h \
-    src/simulator/SimFrameGraph.h \
     src/model/interface/SimCameraInterface.h \
-    src/simulator/SimBufferWindow.h \
     src/controller/task/CompetitionTask.h \
     src/view/CompetitionView.h \
     src/util/VideoLogger.h \
     src/Sub.h \
-    src/SubFactory.h
+    src/SubFactory.h \
+    Simulator/DataStorage.h \
+    Simulator/Sim.h \
+    Simulator/SimLogger.h \
+    Simulator/Objects/Buoy.h \
+    Simulator/Objects/SimObject.h \
+    Simulator/Objects/SimSub.h \
+    Simulator/SimCam.h \
+    Simulator/SimFPGA.h
 
 SOURCES += src/Main.cpp \
            test/CollectionTEST.cpp \
@@ -176,20 +181,21 @@ SOURCES += src/Main.cpp \
     src/view/GUIView.cpp \
     src/view/SimulatorView.cpp \
     src/model/interface/SimFPGAInterface.cpp \
-    src/simulator/SimFPGA.cpp \
-    src/simulator/SimulatedEnvironment.cpp \
-    src/simulator/SimulatedSub.cpp \
-    src/simulator/SimulatorEngine.cpp \
-    src/simulator/PIDController.cpp \
     src/controller/task/PortalTask.cpp \
-    src/simulator/SimFrameGraph.cpp \
     src/model/interface/SimCameraInterface.cpp \
-    src/simulator/SimBufferWindow.cpp \
     src/controller/task/CompetitionTask.cpp \
     src/view/CompetitionView.cpp \
     src/util/VideoLogger.cpp \
     src/Sub.cpp \
-    src/SubFactory.cpp
+    src/SubFactory.cpp \
+    Simulator/DataStorage.cpp \
+    Simulator/Sim.cpp \
+    Simulator/SimLogger.cpp \
+    Simulator/Objects/Buoy.cpp \
+    Simulator/Objects/SimObject.cpp \
+    Simulator/Objects/SimSub.cpp \
+    Simulator/SimCam.cpp \
+    Simulator/SimFPGA.cpp
 
 RESOURCES += \
     src/resources/resources.qrc

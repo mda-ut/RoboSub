@@ -138,7 +138,14 @@ void print_int(int i)
 // set power
 void set_pow(int on_off)
 {
-  IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, on_off);
+  IOWR(MDA_PWR_MGMT_BASE, 0, on_off);
+  //if (on_off) {
+  //  usleep(5);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x01);
+  //  IOWR(MDA_ADC_BASE, 0x00, (0x7 << 1) | 0x00);
+  //  usleep(1);
+  //} 
 }
 
 // set motor direction
@@ -146,19 +153,19 @@ void set_motor_dir(int motor_num, enum MOTOR_DIR dir)
 {
   switch(dir) {
     case MOTOR_DIR_STOPPED:
-      IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x0);
+      IOWR(MDA_MOTOR_CONTROL_BASE, motor_num, 0x0);
       motor_modes[motor_num] = 's';
       break;
     case MOTOR_DIR_BRAKE:
-      IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x2);
+      IOWR(MDA_MOTOR_CONTROL_BASE, motor_num, 0x2);
       motor_modes[motor_num] = 'b';
       break;
     case MOTOR_DIR_REVERSE:
-      IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x1);
+      IOWR(MDA_MOTOR_CONTROL_BASE, motor_num, 0x1);
       motor_modes[motor_num] = 'r';
       break;
     case MOTOR_DIR_FORWARD:
-      IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x3);
+      IOWR(MDA_MOTOR_CONTROL_BASE, motor_num, 0x3);
       motor_modes[motor_num] = 'f';
       break;
   }
@@ -180,7 +187,7 @@ void set_motor_duty_cycle(int motor_num, int duty_cycle)
   duty_cycle = (duty_cycle < MIN_PWM) ? MIN_PWM : duty_cycle;
 
   // set duty period using duty_cycle as a fraction over 1024
-  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, motor_num, duty_cycle * pwm_period / 1024);
+  IOWR(MDA_MOTOR_CONTROL_DUTY_CYCLE, motor_num, duty_cycle * pwm_period / 1024);
   motor_duty_cycles[motor_num] = duty_cycle;
 }
 
@@ -189,7 +196,7 @@ void set_pwm_freq(int freq)
 {
   // 50000 is 50MHz in KHz
   pwm_period = 50000 / freq;
-  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, NUM_MOTORS, pwm_period);
+  IOWR(MDA_MOTOR_CONTROL_DUTY_CYCLE, NUM_MOTORS, pwm_period);
 }
 
 // get motor duty cycle
@@ -209,7 +216,38 @@ int get_pwm_freq()
 // returns depth
 int get_depth()
 {
-  return IORD(ADC_CONTROLLER_0_BASE, 5);
+  int nReadNum = 4;
+  int ch = 0x07;
+  int i, Value;
+  IOWR(MDA_ADC_BASE, 0x01, nReadNum);
+
+
+		// start measure
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x00);
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x01);
+		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x00);
+		usleep(1);
+
+		// wait measure done
+		while ((IORD(MDA_ADC_BASE,0x00) & 0x01) == 0x00);
+
+		// read adc value
+		for(i=0;i<nReadNum;i++){
+			Value = IORD(MDA_ADC_BASE, 0x01);
+			printf("CH%d=%.3fV (0x%04x)\r\n", ch, (float)Value/1000.0, Value);
+		}
+
+		return Value;
+/*
+  IOWR(MDA_ADC_BASE, 0x01, 1);
+
+  while ((IORD(MDA_ADC_BASE,0x00) & 0x01) == 0x00);
+
+  depth = IORD(MDA_ADC_BASE, 0x01);
+  printf("DEPTH = %d\n", depth);
+  return depth;
+  */
+  //return IORD(MDA_ADC_BASE, 5);
 }
 
 // returns a struct of x,y,z acceleration values

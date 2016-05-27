@@ -1,18 +1,13 @@
 #include "SimulatorView.h"
 #include "Stage.h"
 
-SimulatorView::SimulatorView(Stage *stage, Controller *controller, std::vector<State *> states, SimulatedSub* simSub, SimulatedEnvironment* simEnv, Qt3D::QEntity* rootEntity)
+SimulatorView::SimulatorView(Stage *stage, Controller *controller, std::vector<State *> states)
     : View(stage, controller, states) {
-    this->simSub = simSub;
-    this->simEnv = simEnv;
-    this->rootEntity = rootEntity;
-
 }
 
 SimulatorView::~SimulatorView() {
     window->close();
     container->close();
-    delete engine;
     delete logger;
 }
 
@@ -50,9 +45,7 @@ void SimulatorView::initialize() {
     window->installEventFilter(this);
 
     // Initialize the Simulator 3D Engine
-    //TODO: Use dependency injection here instead
-    engine = new SimulatorEngine(container, window, simSub, simEnv, rootEntity);
-    engine->initialize();
+    printf("Sim");
 }
 
 QSize SimulatorView::sizeHint() const {
@@ -70,12 +63,13 @@ QWindow *SimulatorView::getWindow() {
 bool SimulatorView::eventFilter(QObject *obj, QEvent *event) {
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        /*
         if(keyEvent->key() == Qt::Key_Q) {
             logger->info("Q Button pressed.  Exiting Simulator View");
             //window->close();
             //container->close();
             stage->exit();
-        }
+        }*/
         if(keyEvent->key() == Qt::Key_M) {
             logger->info("M Button pressed.  Exiting Simulator View");
             //window->close();
@@ -84,9 +78,5 @@ bool SimulatorView::eventFilter(QObject *obj, QEvent *event) {
         }
     }
     return QObject::eventFilter(obj, event);
-}
-
-void SimulatorView::makeQImage(cv::Mat imgData, QImage &imgHolder) {
-
 }
 
