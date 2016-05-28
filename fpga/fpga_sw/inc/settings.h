@@ -8,7 +8,7 @@
 #define TIMER_RATE_IN_HZ 20
 #define NUM_DEPTH_VALUES 64 /* Ensure this is a power of 2 for better performance */
 
-#define NUM_MOTORS 8
+#define NUM_MOTORS 8 /* Number of possible motor board terminals, not number of motors actually under use */
 #define STR_LEN 127
 #define RAD_TO_DEG 57.3  /* 180/PI */
 #define MDA_MOTOR_CONTROL_DUTY_CYCLE (MDA_MOTOR_CONTROL_BASE + 32)
@@ -66,3 +66,30 @@
 
 /** This converts the controller force into lbs, so that it can be mapped to a PWM */
 #define FACTOR_CONTROLLER_FORCE_TO_LBS 0.005
+
+/** The following defines which motor is mapped to which terminal on the motor board */
+// motors parallel to sub
+#define M_FRONT_LEFT_TERMINAL 1
+#define M_FRONT_RIGHT_TERMINAL 2
+#define M_BACK_LEFT_TERMINAL 3
+#define M_BACK_RIGHT_TERMINAL 4
+// motors perpendicular to sub
+#define MP_FRONT_LEFT_TERMINAL 5
+#define MP_FRONT_RIGHT_TERMINAL 6
+#define MP_BACK_LEFT_TERMINAL 7
+#define MP_BACK_RIGHT_TERMINAL 8
+
+/** The following defines which motors are enabled, 0=false, 1=true */
+// motors parallel to sub
+#define M_FRONT_LEFT_ENABLE 1
+#define M_FRONT_RIGHT_ENABLE 1
+#define M_BACK_LEFT_ENABLE 0 // not used for MDA_TEMPEST
+#define M_BACK_RIGHT_ENABLE 0 // not used for MDA_TEMPEST
+// motors perpendicular to sub
+#define MP_FRONT_LEFT_ENABLE 1
+#define MP_FRONT_RIGHT_ENABLE 1
+#define MP_BACK_LEFT_ENABLE 1
+#define MP_BACK_RIGHT_ENABLE 1
+
+enum terminalEnum { M_FRONT_LEFT, M_FRONT_RIGHT, M_BACK_LEFT, M_BACK_RIGHT, 
+MP_FRONT_LEFT, MP_FRONT_RIGHT, MP_BACK_LEFT, MP_BACK_RIGHT }; 

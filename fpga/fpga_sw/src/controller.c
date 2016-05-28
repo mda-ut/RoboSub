@@ -35,12 +35,37 @@
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
 
+// outline which motors are hooked up to which terminals, allow for maximum of eight motors
+struct motor_terminal_connections hooks;
+// motors parallel to sub
+  hooks.terminals[M_FRONT_LEFT] = M_FRONT_LEFT_TERMINAL; // from settings.h
+  hooks.terminals[M_FRONT_RIGHT] = M_FRONT_RIGHT_TERMINAL;
+  hooks.terminals[M_BACK_LEFT] = M_BACK_LEFT_TERMINAL;
+  hooks.terminals[M_BACK_RIGHT] = M_BACK_RIGHT_TERMINAL;
+  
+  hooks.isEnabled[M_FRONT_LEFT] = M_FRONT_LEFT_ENABLE;
+  hooks.terminals[M_FRONT_RIGHT] = M_FRONT_RIGHT_ENABLE;
+  hooks.terminals[M_BACK_LEFT] = M_BACK_LEFT_ENABLE;
+  hooks.terminals[M_BACK_RIGHT] = M_BACK_RIGHT_ENABLE;
+
+// motors perpendicular to sub
+  hooks.terminals[MP_FRONT_LEFT] = MP_FRONT_LEFT_TERMINAL; // from settings.h
+  hooks.terminals[MP_FRONT_RIGHT] = MP_FRONT_RIGHT_TERMINAL;
+  hooks.terminals[MP_BACK_LEFT] = MP_BACK_LEFT_TERMINAL;
+  hooks.terminals[MP_BACK_RIGHT] = MP_BACK_RIGHT_TERMINAL;
+
+  hooks.isEnabled[MP_FRONT_LEFT] = MP_FRONT_LEFT_ENABLE;
+  hooks.terminals[MP_FRONT_RIGHT] = MP_FRONT_RIGHT_ENABLE;
+  hooks.terminals[MP_BACK_LEFT] = MP_BACK_LEFT_ENABLE;
+  hooks.terminals[MP_BACK_RIGHT] = MP_BACK_RIGHT_ENABLE;
+
 // Data to average depth readings
 int depth_values[NUM_DEPTH_VALUES] = {};
 int depth_sum = 0;
 
-// Motor duty cycles
+// Motor duty cycles, indices from 0 to NUM_MOTORS-1 represent motor board terminals from 1 to NUM_MOTORS
 static int motor_duty_cycle[NUM_MOTORS];
+
 
 // Set target values for the controller
 
@@ -231,18 +256,20 @@ void calculate_pid()
    /** orientation stability
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
-   //subgroup A: 						
-   double m_front_left, m_front_right, m_back_left, m_back_right; // back left and back right are not used for Tempest
-   //subgroup B:
-   double mp_front_left, mp_front_right, mp_back_left, mp_back_right; //mp = motor perpendicular
+
+   // find the pwm needed for each motor
+   double m_pwm[NUM_MOTORS];
+   //subgroup A: m_front_left, m_front_right // back left and back right are not used for MDA_TEMPEST
+   //subgroup B: mp_front_left, mp_front_right, mp_back_left, mp_back_right //mp = motor perpendicular
+   //correspond motors with enumerations mentioned in settings.h
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for yaw motors
 				    // These are actually switched for SubZero
       0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_left //we might change hard-coded 0.5 ratio later
       -0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_right
       0, 0, // since back left and back right are not used
-	&m_front_left, //assumptions: polarity of motors: + pointed towards front O-ring
-	&m_front_right, //positive yaw is left turn
+	&m_pwm[M_FRONT_LEFT], //assumptions: polarity of motors: + pointed towards front O-ring
+	&m_pwm[M_FRONT_RIGHT], //positive yaw is left turn
       	NULL, //&m_back_left//positive foward is forward
       	NULL //&m_back_right //most importantly, assume motors work like rudders kicking backwards
    );
@@ -265,29 +292,27 @@ void calculate_pid()
 				    -0.25*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_front_right
 				    0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_back_left
 				    -0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_back_right
-	&mp_front_left, //assumptions: polarity of motors: + pointed towards water surface
-      	&mp_front_right, //positive roll is CCW if we are looking at the back O-ring of the submarine
-      	&mp_back_left, //positive depth is deeper
-      	&mp_back_right //positive pitch is nose dive
+	&m_pwm[MP_FRONT_LEFT], //assumptions: polarity of motors: + pointed towards water surface
+      	&m_pwm[MP_FRONT_RIGHT], //positive roll is CCW if we are looking at the back O-ring of the submarine
+      	&m_pwm[MP_BACK_LEFT], //positive depth is deeper
+      	&m_pwm[MP_BACK_RIGHT] //positive pitch is nose dive
    );
 
-   M_FRONT_LEFT = (int)m_front_left;
-   M_FRONT_RIGHT = (int)m_front_right;
-   //M_BACK_LEFT = (int)m_back_left;
-   //M_BACK_RIGHT = (int)m_back_right;
-   MP_FRONT_LEFT = (int)mp_front_left;
-   MP_FRONT_RIGHT = (int)mp_front_right;
-   MP_BACK_LEFT = (int)mp_back_left;
-   MP_BACK_RIGHT = (int)mp_back_right;
+  // use the hooks mappings to map motor duty cycles to respective motors
+  // the -1 is there since motor_duty_cycle 0~7 map to terminals 1~8 on motor board
 
-
+   int i;
+   for (i = 0; i < NUM_MOTORS; i++){
+     if(hooks.isEnabled[i]){
+        motor_duty_cycle[ hooks.terminals[i] - 1 ] = (int)m_pwm[i];
+     } else motor_duty_cycle[ hooks.terminals[i] -1] = 0;
+   }
    /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
     */
    
    // write the motor settings
-   int i;
-   for ( i = 0; i < 8; i++ )
+   for ( i = 0; i < NUM_MOTORS; i++ )
    {
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
    }  
