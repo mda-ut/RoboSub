@@ -18,7 +18,7 @@
 
 `include "mda_motor_control_defines.v"
 
-module mda_motor_control_pwm_gen (input clk, input on, input [15:0] period, input [15:0] duty_cycle, output reg dir_reg);
+module mda_motor_control_pwm_gen (input clk, input on, input [15:0] period, input [15:0] duty_cycle, output reg dir_reg, on_reg);
 //	clk: clk for sequential logic
 //	on: whether the motor is on (1'b1) or off (1'b0)
 // 	period: defines how long 1 pwm period is. Max is 2^16-1

@@ -21,7 +21,6 @@ module mda_motor_control (input clk, input on, input [15:0] period, input [15:0]
 	//		- duty_cycle: # of on cycles
 	//		- out: H-Bridge MOSFET states
 	wire motor_on, motor_dir;
-   assign motor_on = on;
 	
 	// PWM Generator Instantiation
 	mda_motor_control_pwm_gen pwm_generator (clk, on, period, duty_cycle, motor_dir, motor_on);
