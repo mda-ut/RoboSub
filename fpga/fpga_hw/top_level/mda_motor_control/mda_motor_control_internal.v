@@ -7,14 +7,32 @@
 //
 // 2016/5/22 - 1.0: Copied legacy verilog and made modifications for Robosub
 //					2016 competition. Using new documentation convention.
-// Shai Bonen
+// Shai Bonen1
+// 2016/6/19 - 2.0: Revised for usage with L298 dual motor board.
+// 					out_reg will now have pwm,forward,reverse,ena. Added
+//					the input pwm. This param is whether pwm is in on time
+//					or off time.
+// Albert Hsueh
+//
+// 2016/6/21 - 2.1: Because of dh2 breakage, reduce out_reg to just use pwm, forward and reverse.
+//					But really nothing needs to change here. just that out[3]
+//					is not useful anymore. only change is, on disable, we put
+//					low to both foward and reverse.
+// Albert Hsueh
+
+// 2016/6/21 - 2.2: Revised to work with bts7960 driver. WE ONLY CARE about the out[2:1], nothing else.
+//					When forward, out[2] should have the pwm.
+//					When reverse, out[1] should have the pwm.
+//					With v2.0's code, out[2:1] already has pwm as observed from oscillascope.
+//					Lastly, added a break case functionality
+// Albert Hsueh
 //////////////////////////////////////////////////////////////////////////
 
 `include "mda_motor_control_defines.v"
 
 // sets the actual output to the H-bridges (the out output from the declaration
 // of motor_controller).
-module mda_motor_control_internal (input clk, input dir, input on, output reg [3:0] out);
+module mda_motor_control_internal (input clk, input dir, input on, input pwm, output reg [3:0] out);
 	// Set initial state
 	reg [3:0] out_reg;
 	reg [9:0] dead_time_counter = `DEAD_TIME;
@@ -35,15 +53,14 @@ module mda_motor_control_internal (input clk, input dir, input on, output reg [3
 
 		// Set out_reg (i.e. H-Bridge MOSFET state) appropriately based on direction and on/off
 		casex ({dir, on})
-		// Motor Drifts. Turn off all MOSFETs
-			2'b00: out_reg <= 4'b0000;
-		// Brake Motor. Turn on both bottom MOSFETs. This line used to be 1010, however we think this (albeit it disables the motor overall) 
-		// wastes power (we have a resistor to bleed charge), therefore we will force both motor leads to ground.
-			2'b10: out_reg <= 4'b0101;	
-		// Forward Direction. Turn on Top MOSFET for p direction and bottom MOSFET for n direction.
-			2'b11: out_reg <= 4'b1001;
-		// Backward Direction. Turn on Top MOSFET for n direction and bottom MOSFET for p direction.
-			2'b01: out_reg <= 4'b0110;
+		// Motor Drifts. disable motor
+			2'b00: out_reg <= (pwm<<3|4'b0111) & 4'b1000;
+		// Brake Motor. Attempt to do this by putting pwm to both out 2 and 1, and also enable motor so it can resist motion
+			2'b10: out_reg <= (pwm<<3|4'b0111) & 4'b1111;	
+		// Forward Direction. enable, put to forward, and pwm
+			2'b11: out_reg <= (pwm<<3|4'b0111) & 4'b1101;
+		// Backward Direction. enable, put to reverse, and pwm
+			2'b01: out_reg <= (pwm<<3|4'b0111) & 4'b1011;
 		endcase
 
 		// Record the current motor state as a record to compare if the state has changed.

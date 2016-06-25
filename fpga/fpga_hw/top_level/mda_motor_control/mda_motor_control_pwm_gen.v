@@ -14,11 +14,16 @@
 //					2016 competition. Using new documentation convention.
 //					Updated variable names and comments to be more clear.
 // Shai Bonen
+// 
+// 2016/6/19 - 2.0: Altered to work with revised motor_internal v2.0. Main diff
+//					is that the mi instance is passed a pwm param now.
+//					Therefore we have an extra output reg called pwm_reg.
+// Albert Hsueh
 //////////////////////////////////////////////////////////////////////////
 
 `include "mda_motor_control_defines.v"
 
-module mda_motor_control_pwm_gen (input clk, input on, input [15:0] period, input [15:0] duty_cycle, output reg dir_reg, on_reg);
+module mda_motor_control_pwm_gen (input clk, input on, input [15:0] period, input [15:0] duty_cycle, output reg dir_reg, on_reg, pwm_reg);
 //	clk: clk for sequential logic
 //	on: whether the motor is on (1'b1) or off (1'b0)
 // 	period: defines how long 1 pwm period is. Max is 2^16-1
@@ -72,6 +77,8 @@ module mda_motor_control_pwm_gen (input clk, input on, input [15:0] period, inpu
 		dir_reg <= (period_counter < corrected_duty_cycle) ? direction : ((on) ? 1'b1 : 1'b0); // Shai's Edit: 
 		// sets the on_reg: pwm_on_time -> on input and we are not set to 50% Duty_Cycle, pwm_off_time -> 0 (b/c we are off)
 		on_reg <= (period_counter < corrected_duty_cycle) ? on&&(corrected_duty_cycle!=half_period) : 1'b0;
+		// sets the pwm_reg: pwm_on_time -> 1, pwm_off_time -> 0
+		pwm_reg <= (period_counter < corrected_duty_cycle) ? 1'b1 : 1'b0;
   end
 
 endmodule

@@ -10,6 +10,9 @@
 // 2016/5/22 - 1.0: Copied legacy verilog and made modifications for Robosub
 //					2016 competition. Using new documentation convention.
 // Shai Bonen
+// 2016/6/19 - 2.0: revised to work with motor_control.v 2.0 and motor_internal.v 2.0. Diff
+//					is we added motor_pwm wire.
+// Albert Hsueh
 //////////////////////////////////////////////////////////////////////////
 
 `include "mda_motor_control_defines.v"
@@ -20,12 +23,12 @@ module mda_motor_control (input clk, input on, input [15:0] period, input [15:0]
 	//		- period: The pwm period in cycles. Operates @ CLOCK Freq = 
 	//		- duty_cycle: # of on cycles
 	//		- out: H-Bridge MOSFET states
-	wire motor_on, motor_dir;
+	wire motor_on, motor_dir, motor_pwm;
 	
 	// PWM Generator Instantiation
-	mda_motor_control_pwm_gen pwm_generator (clk, on, period, duty_cycle, motor_dir, motor_on);
+	mda_motor_control_pwm_gen pwm_generator (clk, on, period, duty_cycle, motor_dir, motor_on, motor_pwm);
 	// Motor Controller Logics Instantiation
-	mda_motor_control_internal mi(clk, motor_dir, motor_on, out);
+	mda_motor_control_internal mi(clk, motor_dir, motor_on, motor_pwm, out);
 
 endmodule
 
