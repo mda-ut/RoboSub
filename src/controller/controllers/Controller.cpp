@@ -96,12 +96,12 @@ void Controller::handleStopButtonClick() {
 
 void Controller::handleSinkButtonClick() {
     logger->info("Adding Sink Task to queue");
-    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, 50));
+    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, 150));
 }
 
 void Controller::handleRiseButtonClick() {
     logger->info("Adding Rise Task to queue");
-    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, -50));
+    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, -150));
 }
 
 void Controller::handleGateTaskClick() {
