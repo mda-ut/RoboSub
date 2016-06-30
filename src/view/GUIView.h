@@ -60,6 +60,7 @@ private:
     QPushButton *surfaceButton;
     QPushButton *gateButton;
     QPushButton *pathButton;
+    QPushButton *buoyButton;
 
     QLabel* systemActions;
     QPushButton *menuButton;

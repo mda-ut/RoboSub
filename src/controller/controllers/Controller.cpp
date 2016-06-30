@@ -114,6 +114,11 @@ void Controller::handlePathTaskClick() {
     addTaskToQueue(TaskFactory::createPathTask(models[DOWNCAM], models[FPGA], targetYaw));
 }
 
+void Controller::handleBuoyTaskClick() {
+    logger->info("Adding Buoy Task to queue");
+    addTaskToQueue(TaskFactory::createBuoyTask(models[DOWNCAM], models[FPGA], targetDepth, targetYaw));
+}
+
 void Controller::runCompetition() {
     logger->info("Adding Competition Task to queue");
     addTaskToQueue(TaskFactory::createCompetitionTask(models[FRONTCAM], models[DOWNCAM], models[FPGA], targetDepth, targetYaw));

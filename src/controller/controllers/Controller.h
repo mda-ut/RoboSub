@@ -135,6 +135,11 @@ class Controller : public QObject {
          */
         void handlePathTaskClick();
 
+        /**
+         * @brief Handles the button click for the BuoyTask
+         */
+        void handleBuoyTaskClick();
+
         void runCompetition();
 
         /**

@@ -70,7 +70,7 @@ void PathTask::execute() {
     // Load properties file
     PropertyReader* propReader;
     Properties* settings;
-    propReader = new PropertyReader("../src/settings/path_task_settings.txt");
+    propReader = new PropertyReader("settings/path_task_settings.txt");
     settings = propReader->load();
 
     int timeOut = std::stoi(settings->getProperty("TIMEOUT"));
