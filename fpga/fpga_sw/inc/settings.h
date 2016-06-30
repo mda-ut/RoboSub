@@ -49,7 +49,7 @@
 #define YAW_CONST_I 0.0 /* NOT CALIBRATED */
 #define YAW_CONST_D 0.0 /* NOT CALIBRATED */
 #define YAW_ALPHA 0.0
-#define DEPTH_CONST_P 10.0
+#define DEPTH_CONST_P 5.0
 #define DEPTH_CONST_I 0.000
 #define DEPTH_CONST_D 0 //1
 #define DEPTH_ALPHA 0.0
