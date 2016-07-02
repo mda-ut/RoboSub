@@ -38,7 +38,7 @@ INCLUDEPATH += . \
 INCLUDEPATH += $$PWD/Simulator/irrlicht-1.8.3/lib/Linux $$PWD/Simulator/irrlicht-1.8.3/include
 unix:!macx: PRE_TARGETDEPS += $$PWD/Simulator/irrlicht-1.8.3/lib/Linux/libIrrlicht.a
 
-OTHER_FILES += src/settings/* Simulator/assets/*
+OTHER_FILES += src/settings/*
 config.path =$${OUT_PWD}/settings
 config.files = src/settings/*
 assets.path =$${OUT_PWD}/assets
