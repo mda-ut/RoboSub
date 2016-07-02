@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "alt_types.h"
+#include "settings.h"
 
 #define ABS(x) (((x) > 0) ? (x) : (-(x)))
 
@@ -29,10 +30,14 @@ struct orientation {
  */
 struct motor_terminal_connections {
   // terminal on the motor board, possible value from 1 to 8
+  // Indexing for this array corresponds to terminalEnum in settings.h
+  // Value @ Index corresponds to which H-Bridge on the motor boards (terminal) that motor enumeration corresponds to
   int terminals[NUM_MOTORS];
   // whether the motor is enabled, 0 false 1 true
+  // Indexing for this array corresponds to terminalEnum in settings.h
+  // Value @ Index corresponds to whether that motor has been enabled in settings.h
   bool isEnabled[NUM_MOTORS];
-}
+};
 
 void set_target_speed(int speed);
 void set_target_heading(int heading);

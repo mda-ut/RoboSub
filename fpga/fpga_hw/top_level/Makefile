@@ -61,7 +61,7 @@ EDA_ARGS = --read_settings_files=off --write_settings_files=off
 
 $(QSYSINFO_FILE): $(QSYSINFO_FILE_DEPENDS) $(SOURCE_FILES)
 	qsys-generate $(QSYS_FILE) -bsf -od=$(QSYS_NAME) --family=$(FAMILY) --part=$(PART)
-	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_PATH) --family=$(FAMILY) --part=$(PART) #|| [$$? -eq 4]
+	qsys-generate $(QSYS_FILE) --synthesis=VERILOG -od=$(QSYS_NAME) --family=$(FAMILY) --part=$(PART) #|| [$$? -eq 4]
 
 
 $(OUTPUT_FOLDER)/$(PROJECT).map.rpt: $(SOURCE_FILES) $(QSYSINFO_FILE)

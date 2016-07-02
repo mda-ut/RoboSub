@@ -24,40 +24,26 @@
 #include "pid.h"
 #include "pwm_force.h"
 #include "rs232.h"
-#include "settings.h"
 #include "utils.h"
 
 #define MAX_YAW 360
 
 #define PRIORITIZE_PITCH_OVER_DEPTH
+int superDuperCounter = 0;
 
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
 
 // outline which motors are hooked up to which terminals, allow for maximum of eight motors
-struct motor_terminal_connections hooks;
-// motors parallel to sub
-  hooks.terminals[M_FRONT_LEFT] = M_FRONT_LEFT_TERMINAL; // from settings.h
-  hooks.terminals[M_FRONT_RIGHT] = M_FRONT_RIGHT_TERMINAL;
-  hooks.terminals[M_BACK_LEFT] = M_BACK_LEFT_TERMINAL;
-  hooks.terminals[M_BACK_RIGHT] = M_BACK_RIGHT_TERMINAL;
-  
-  hooks.isEnabled[M_FRONT_LEFT] = M_FRONT_LEFT_ENABLE;
-  hooks.terminals[M_FRONT_RIGHT] = M_FRONT_RIGHT_ENABLE;
-  hooks.terminals[M_BACK_LEFT] = M_BACK_LEFT_ENABLE;
-  hooks.terminals[M_BACK_RIGHT] = M_BACK_RIGHT_ENABLE;
+struct motor_terminal_connections hooks = 
+{
+  /* terminal[NUM_MOTORS] */ {M_FRONT_LEFT_TERMINAL, M_FRONT_RIGHT_TERMINAL, M_BACK_LEFT_TERMINAL, M_BACK_RIGHT_TERMINAL, 
+			MP_FRONT_LEFT_TERMINAL, MP_FRONT_RIGHT_TERMINAL, MP_BACK_LEFT_TERMINAL, MP_BACK_RIGHT_TERMINAL},
 
-// motors perpendicular to sub
-  hooks.terminals[MP_FRONT_LEFT] = MP_FRONT_LEFT_TERMINAL; // from settings.h
-  hooks.terminals[MP_FRONT_RIGHT] = MP_FRONT_RIGHT_TERMINAL;
-  hooks.terminals[MP_BACK_LEFT] = MP_BACK_LEFT_TERMINAL;
-  hooks.terminals[MP_BACK_RIGHT] = MP_BACK_RIGHT_TERMINAL;
-
-  hooks.isEnabled[MP_FRONT_LEFT] = MP_FRONT_LEFT_ENABLE;
-  hooks.terminals[MP_FRONT_RIGHT] = MP_FRONT_RIGHT_ENABLE;
-  hooks.terminals[MP_BACK_LEFT] = MP_BACK_LEFT_ENABLE;
-  hooks.terminals[MP_BACK_RIGHT] = MP_BACK_RIGHT_ENABLE;
+  /* isEnabled[NUM_MOTORS] */ {M_FRONT_LEFT_ENABLE, M_FRONT_RIGHT_ENABLE, M_BACK_LEFT_ENABLE, M_BACK_RIGHT_ENABLE, 
+			MP_FRONT_LEFT_ENABLE, MP_FRONT_RIGHT_ENABLE, MP_BACK_LEFT_ENABLE, MP_BACK_RIGHT_ENABLE},
+};
 
 // Data to average depth readings
 int depth_values[NUM_DEPTH_VALUES] = {};
@@ -171,7 +157,7 @@ void set_pid_constants_depth(double P, double I, double D, double Alpha)
     set_pid_constants(P, I, D, Alpha, &PID_Depth);
 }
 
-double motor_force_to_pwm (double force) { //QUESTION MARK THIS IS WEIRD AF
+double motor_force_to_pwm (double force) {
     int pwm = ZERO_PWM + pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
     return pwm;
 }
@@ -253,6 +239,13 @@ void calculate_pid()
    double Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
    double Forward_Force_Needed = FACTOR_SPEED_TO_FORCE * target_orientation.speed;
 
+   // some print statements to diagnose PID outputs
+if(superDuperCounter%100 == 0){
+   printf("Roll PID: %f, Roll force needed: %f \n", Roll_Force_Needed/FACTOR_PID_ROLL_TO_FORCE, Roll_Force_Needed);
+   printf("Pitch PID: %f, Pitch force needed: %f \n", Pitch_Force_Needed/FACTOR_PID_PITCH_TO_FORCE, Pitch_Force_Needed);
+   printf("Depth PID: %f, Depth force needed: %f \n", Depth_Force_Needed/FACTOR_PID_DEPTH_TO_FORCE, Depth_Force_Needed);
+   printf("Yaw PID: %f, Yaw force needed: %f \n", Yaw_Force_Needed/FACTOR_PID_YAW_TO_FORCE, Yaw_Force_Needed);
+}
    /** orientation stability
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
@@ -265,13 +258,13 @@ void calculate_pid()
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for yaw motors
 				    // These are actually switched for SubZero
-      0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_left //we might change hard-coded 0.5 ratio later
-      -0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_right
+      0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_left //we might change hard-coded 0.5 ratio later
+      -0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_right
       0, 0, // since back left and back right are not used
-	&m_pwm[M_FRONT_LEFT], //assumptions: polarity of motors: + pointed towards front O-ring
-	&m_pwm[M_FRONT_RIGHT], //positive yaw is left turn
-      	NULL, //&m_back_left//positive foward is forward
-      	NULL //&m_back_right //most importantly, assume motors work like rudders kicking backwards
+	&m_pwm[M_FRONT_LEFT], //polarity of motors: + pointed towards front of sub
+	&m_pwm[M_FRONT_RIGHT], //positive yaw is right turn
+      	NULL, //&m_back_left //positive foward is forward
+      	NULL //&m_back_right // pwm greater than 512 is forward
    );
 #ifdef PRIORITIZE_PITCH_OVER_DEPTH
    if (ABS(current_orientation.pitch) > 30) {
@@ -288,14 +281,14 @@ void calculate_pid()
       //0.5*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // m_front_left
       //-0.5*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // m_front_right
       //-0.5*Pitch_Force_Needed + 0.4*Depth_Force_Needed, // m_rear
-				    0.25*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_front_left
-				    -0.25*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_front_right
-				    0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_back_left
-				    -0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // mp_back_right
+				    -0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed - 0.2*Depth_Force_Needed, // mp_front_left
+				    +0.25*Roll_Force_Needed - 0.2*Pitch_Force_Needed - 0.2*Depth_Force_Needed, // mp_front_right
+				    -0.25*Roll_Force_Needed + 0.2*Pitch_Force_Needed - 0.2*Depth_Force_Needed, // mp_back_left
+				    +0.25*Roll_Force_Needed + 0.2*Pitch_Force_Needed - 0.2*Depth_Force_Needed, // mp_back_right
 	&m_pwm[MP_FRONT_LEFT], //assumptions: polarity of motors: + pointed towards water surface
-      	&m_pwm[MP_FRONT_RIGHT], //positive roll is CCW if we are looking at the back O-ring of the submarine
+      	&m_pwm[MP_FRONT_RIGHT], //positive roll is left side sinking right side rising
       	&m_pwm[MP_BACK_LEFT], //positive depth is deeper
-      	&m_pwm[MP_BACK_RIGHT] //positive pitch is nose dive
+      	&m_pwm[MP_BACK_RIGHT] //positive pitch is surface
    );
 
   // use the hooks mappings to map motor duty cycles to respective motors
@@ -304,8 +297,14 @@ void calculate_pid()
    int i;
    for (i = 0; i < NUM_MOTORS; i++){
      if(hooks.isEnabled[i]){
-        motor_duty_cycle[ hooks.terminals[i] - 1 ] = (int)m_pwm[i];
-     } else motor_duty_cycle[ hooks.terminals[i] -1] = 0;
+        motor_duty_cycle[ hooks.terminals[i] ] = (int)m_pwm[i];
+	if(superDuperCounter%100 == 0)	
+	printf("motor number: %d, connected to terminal number: %d, with pwm %d \n", i, hooks.terminals[i], (int)m_pwm[i]);
+     } else {
+	motor_duty_cycle[ hooks.terminals[i] ] = 0;
+	if(superDuperCounter%100 == 0)	
+	printf("motor number: %d, connected to terminal number: %d, disabled \n", i, hooks.terminals[i]);
+     }
    }
    /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
@@ -315,7 +314,8 @@ void calculate_pid()
    for ( i = 0; i < NUM_MOTORS; i++ )
    {
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
-   }  
+   }
+superDuperCounter++;  
 }
 
 void print_debug_controller()

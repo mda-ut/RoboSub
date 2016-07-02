@@ -1,5 +1,6 @@
 // Set some #define values to use as settings
-
+#ifndef SETTINGS_H
+#define SETTINGS_H
 // allow the user to interact when using commands
 #define INTERACTIVE
 
@@ -48,9 +49,9 @@
 #define YAW_CONST_I 0.0 /* NOT CALIBRATED */
 #define YAW_CONST_D 0.0 /* NOT CALIBRATED */
 #define YAW_ALPHA 0.0
-#define DEPTH_CONST_P 10.0
+#define DEPTH_CONST_P 5.0
 #define DEPTH_CONST_I 0.000
-#define DEPTH_CONST_D 1
+#define DEPTH_CONST_D 0 //1
 #define DEPTH_ALPHA 0.0
 
 /** The following constants define the scaling between PID controller outputs
@@ -68,16 +69,18 @@
 #define FACTOR_CONTROLLER_FORCE_TO_LBS 0.005
 
 /** The following defines which motor is mapped to which terminal on the motor board */
+// NOTE: Motor #s match the hardware motor numbering, the code still indexes motors by 0-7 indexing
+// Also, make sure motor mapping are 1-for-1, even if a motor is not enabled
 // motors parallel to sub
-#define M_FRONT_LEFT_TERMINAL 1
-#define M_FRONT_RIGHT_TERMINAL 2
-#define M_BACK_LEFT_TERMINAL 3
-#define M_BACK_RIGHT_TERMINAL 4
+#define M_FRONT_LEFT_TERMINAL 4
+#define M_FRONT_RIGHT_TERMINAL 5
+#define M_BACK_LEFT_TERMINAL 6
+#define M_BACK_RIGHT_TERMINAL 7
 // motors perpendicular to sub
-#define MP_FRONT_LEFT_TERMINAL 5
-#define MP_FRONT_RIGHT_TERMINAL 6
-#define MP_BACK_LEFT_TERMINAL 7
-#define MP_BACK_RIGHT_TERMINAL 8
+#define MP_FRONT_LEFT_TERMINAL 0
+#define MP_FRONT_RIGHT_TERMINAL 1
+#define MP_BACK_LEFT_TERMINAL 3
+#define MP_BACK_RIGHT_TERMINAL 2
 
 /** The following defines which motors are enabled, 0=false, 1=true */
 // motors parallel to sub
@@ -93,3 +96,8 @@
 
 enum terminalEnum { M_FRONT_LEFT, M_FRONT_RIGHT, M_BACK_LEFT, M_BACK_RIGHT, 
 MP_FRONT_LEFT, MP_FRONT_RIGHT, MP_BACK_LEFT, MP_BACK_RIGHT }; 
+<<<<<<< HEAD
+=======
+
+#endif //SETTINGS_H
+>>>>>>> 12bf98d1911d29632f0eca907ff8493e62c22297

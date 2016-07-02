@@ -182,10 +182,13 @@ char get_motor_dir(int motor_num)
 // set motor duty cycle
 void set_motor_duty_cycle(int motor_num, int duty_cycle)
 {
+
+  // Put exceptions before the safety code, not after
+
   // Ensure duty cycle is between MIN_PWM and MAX_PWM
   duty_cycle = (duty_cycle > MAX_PWM) ? MAX_PWM : duty_cycle;
   duty_cycle = (duty_cycle < MIN_PWM) ? MIN_PWM : duty_cycle;
-
+  
   // set duty period using duty_cycle as a fraction over 1024
   IOWR(MDA_MOTOR_CONTROL_DUTY_CYCLE, motor_num, duty_cycle * pwm_period / 1024);
   motor_duty_cycles[motor_num] = duty_cycle;
@@ -234,7 +237,8 @@ int get_depth()
 		// read adc value
 		for(i=0;i<nReadNum;i++){
 			Value = IORD(MDA_ADC_BASE, 0x01);
-			printf("CH%d=%.3fV (0x%04x)\r\n", ch, (float)Value/1000.0, Value);
+			//printf("CH%d=%.3fV (0x%04x)\r\n", ch, (float)Value/1000.0, Value);
+			//printf("%d\n", Value);
 		}
 
 		return Value;

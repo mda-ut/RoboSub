@@ -96,12 +96,12 @@ void Controller::handleStopButtonClick() {
 
 void Controller::handleSinkButtonClick() {
     logger->info("Adding Sink Task to queue");
-    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, 50));
+    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, 150));
 }
 
 void Controller::handleRiseButtonClick() {
     logger->info("Adding Rise Task to queue");
-    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, -50));
+    addTaskToQueue(TaskFactory::createDepthTask(models[FPGA], targetDepth, -150));
 }
 
 void Controller::handleGateTaskClick() {
@@ -112,6 +112,11 @@ void Controller::handleGateTaskClick() {
 void Controller::handlePathTaskClick() {
     logger->info("Adding Path Task to queue");
     addTaskToQueue(TaskFactory::createPathTask(models[DOWNCAM], models[FPGA], targetYaw));
+}
+
+void Controller::handleBuoyTaskClick() {
+    logger->info("Adding Buoy Task to queue");
+    addTaskToQueue(TaskFactory::createBuoyTask(models[DOWNCAM], models[FPGA], targetDepth, targetYaw));
 }
 
 void Controller::runCompetition() {
