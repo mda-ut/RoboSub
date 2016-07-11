@@ -5,7 +5,7 @@ PortalTask::PortalTask(CameraModel* camModel)
     this->camModel = camModel;
     // Load properties file
     PropertyReader* propReader;
-    propReader = new PropertyReader("../src/settings/portal_task_settings.txt");
+    propReader = new PropertyReader("settings/portal_task_settings.txt");
     settings = propReader->load();
 
     thresh = std::stof(settings->getProperty("thresh"));

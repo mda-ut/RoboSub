@@ -35,6 +35,8 @@ void GUIView::update(int id) {
             int power = newData->getPower();
             int depth = newData->getDepth();
             int yaw = newData->getYaw();
+            int targetDepth = controller->getTargetDepth();
+            int targetYaw = controller->getTargetYaw();
 
             if (power) {
                 powerStatus->setText("Power: On");
@@ -45,6 +47,10 @@ void GUIView::update(int id) {
             depthReading->setText(temp.c_str());
             temp = "Yaw: " + std::to_string(yaw);
             yawReading->setText(temp.c_str());
+            temp = "Target: " + std::to_string(targetDepth);
+            targetDepthLabel->setText(temp.c_str());
+            temp = "Target: " + std::to_string(targetYaw);
+            targetYawLabel->setText(temp.c_str());
             break;
         }
     }
@@ -106,6 +112,7 @@ void GUIView::initialize() {
     surfaceButton = new QPushButton("Surface");
     gateButton = new QPushButton("Gate Task");
     pathButton = new QPushButton("Path Task");
+    buoyButton = new QPushButton("Buoy Task");
 
     systemActions = new QLabel("System Actions");
     menuButton = new QPushButton("Menu");
@@ -145,6 +152,7 @@ void GUIView::initialize() {
     verticalLayout->addWidget(surfaceButton);
     verticalLayout->addWidget(gateButton);
     verticalLayout->addWidget(pathButton);
+    verticalLayout->addWidget(buoyButton);
     verticalLayout->addSpacing(10); //Spacing size of 20 pixels
 
     verticalLayout->addWidget(systemActions);
@@ -175,6 +183,7 @@ void GUIView::initialize() {
     connect(stopButton, SIGNAL(clicked()), controller, SLOT(handleStopButtonClick()));
     connect(gateButton, SIGNAL(clicked()), controller, SLOT(handleGateTaskClick()));
     connect(pathButton, SIGNAL(clicked()), controller, SLOT(handlePathTaskClick()));
+    connect(buoyButton, SIGNAL(clicked()), controller, SLOT(handleBuoyTaskClick()));
     connect(menuButton, SIGNAL(clicked()), stage, SLOT(switchToMenuView()));
     connect(exitButton, SIGNAL(clicked()), stage, SLOT(exit()));
 }
@@ -221,6 +230,9 @@ void GUIView::keyPressEvent(QKeyEvent* event) {
         break;
     case Qt::Key_2:
         pathButton->click();
+        break;
+    case Qt::Key_3:
+        buoyButton->click();
         break;
     case Qt::Key_Q:
         exitButton->click();

@@ -32,7 +32,7 @@ void PID_Update (Controller_PID* PID, double value) {
     if (PID->num_values >= PID_NUM_OLD_VALUES-1) { // if enough values accumulated
         for (i = 1; i < PID_NUM_OLD_VALUES; i++)
             temp += PID->old_values[i-1] - PID->old_values[i];
-        PID->D = (float)temp / PID_NUM_OLD_VALUES * TIMER_RATE_IN_HZ; //average slope across several readings
+        PID->D = ((float)temp / PID_NUM_OLD_VALUES) * TIMER_RATE_IN_HZ; //average slope across several readings
     }
     else {
         PID->D = 0;
