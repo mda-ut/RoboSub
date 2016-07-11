@@ -18,7 +18,7 @@ Sim::Sim(void* c)
     SIrrlichtCreationParameters params = SIrrlichtCreationParameters();
     //params.AntiAlias = 8;
     params.DriverType = video::EDT_OPENGL;
-    params.WindowSize = core::dimension2d<u32>(640, 480);
+    params.WindowSize = core::dimension2d<u32>(resX, resY);
     params.EventReceiver = ih;
     device = createDeviceEx(params);
     if (!device){
@@ -238,11 +238,11 @@ int Sim::start(){
         for(int y = 0; y < sizeY; y++){
             for(int x = 0; x < sizeX; x++){
                 SColor color = image->getPixel(x, y).color;
-                if (color.getBlue()+150 > 255)
+                /*if (color.getBlue()+150 > 255)
                     color.setBlue(255);
                 else
-                    color.setBlue(color.getBlue()+150);
-                cv::Vec3b CVColor(color.getRed(), color.getGreen(), color.getBlue());
+                    color.setBlue(color.getBlue()+150);*/
+                cv::Vec3b CVColor(color.getBlue(), color.getGreen(), color.getRed());
                 frontFrame->at<cv::Vec3b>(y,x) = CVColor;
             }
             for (int x = sizeX; x < sizeX*2; x++){
@@ -260,6 +260,7 @@ int Sim::start(){
 //        cv::imshow("down", *downFrame);
 //        cv::waitKey(1);
         delete image;
+//        usleep(100);
 
     }
     smgr->drop();
