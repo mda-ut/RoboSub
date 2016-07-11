@@ -35,6 +35,8 @@ void GUIView::update(int id) {
             int power = newData->getPower();
             int depth = newData->getDepth();
             int yaw = newData->getYaw();
+            int targetDepth = controller->getTargetDepth();
+            int targetYaw = controller->getTargetYaw();
 
             if (power) {
                 powerStatus->setText("Power: On");
@@ -45,6 +47,10 @@ void GUIView::update(int id) {
             depthReading->setText(temp.c_str());
             temp = "Yaw: " + std::to_string(yaw);
             yawReading->setText(temp.c_str());
+            temp = "Target: " + std::to_string(targetDepth);
+            targetDepthLabel->setText(temp.c_str());
+            temp = "Target: " + std::to_string(targetYaw);
+            targetYawLabel->setText(temp.c_str());
             break;
         }
     }

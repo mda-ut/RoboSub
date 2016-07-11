@@ -74,6 +74,9 @@ class Controller : public QObject {
 
         void setView(View* view);
 
+        int getTargetYaw();
+        int getTargetDepth();
+
 	public slots:
 		/**
 		 * Handles the results from the ControllerThread

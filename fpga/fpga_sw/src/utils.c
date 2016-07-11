@@ -221,10 +221,11 @@ int get_depth()
 {
   int nReadNum = 4;
   int ch = 0x07;
-  int i, Value;
+  int i;
+  int Value = 0;
   IOWR(MDA_ADC_BASE, 0x01, nReadNum);
 
-
+	for(i=0;i<nReadNum;i++){
 		// start measure
 		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x00);
 		IOWR(MDA_ADC_BASE, 0x00, (ch << 1) | 0x01);
@@ -235,13 +236,12 @@ int get_depth()
 		while ((IORD(MDA_ADC_BASE,0x00) & 0x01) == 0x00);
 
 		// read adc value
-		for(i=0;i<nReadNum;i++){
-			Value = IORD(MDA_ADC_BASE, 0x01);
+			Value += IORD(MDA_ADC_BASE, 0x01);
 			//printf("CH%d=%.3fV (0x%04x)\r\n", ch, (float)Value/1000.0, Value);
 			//printf("%d\n", Value);
-		}
+	}
 
-		return Value;
+	return Value/nReadNum;
 /*
   IOWR(MDA_ADC_BASE, 0x01, 1);
 

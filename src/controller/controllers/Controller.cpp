@@ -148,3 +148,13 @@ void Controller::addTaskToQueue(Task *newTask)
     logger->trace("Unlocking mutex");
 
 }
+
+int Controller::getTargetDepth()
+{
+    return targetDepth;
+}
+
+int Controller::getTargetYaw()
+{
+    return targetYaw;
+}
