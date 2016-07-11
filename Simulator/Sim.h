@@ -44,6 +44,7 @@ private:
     ISceneNode* camChilds[4] = {0,0,0,0};
     static const int resX = 640;
     static const int resY = 480;
+    static const int maxFPS = 10;
 
     InputHandler* ih = 0;                //handles input from user
     std::vector<SimObject*> objs;   //list of simulated objects

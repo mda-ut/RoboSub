@@ -14,10 +14,9 @@
 #include "SubFactory.h"
 #include "Stage.h"
 #include "StateTester.h"
-
+#include "VideoTesting.h"
 
 int main(int argc, char** argv) {
-
     Timer* logTimer = new Timer();
     QApplication app(argc, argv);
     Logger logger("Main");
@@ -91,5 +90,6 @@ int main(int argc, char** argv) {
         delete propReader;
     }
     return app.exec();
-
+//    VideoTesting vt(0); //camera id or file name
+//    vt.run(1); //0 = video; 1 = webcam; 2 = imag
 }

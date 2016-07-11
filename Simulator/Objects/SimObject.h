@@ -40,7 +40,10 @@ protected:
     irr::core::vector3df vel;
     irr::core::vector3df acc;
     irr::core::vector3df fri;
+    irr::core::vector3df targetRot;
+    const float maxRotSpeed = 10;
     const float friction = 2.5f;
+    const float maxSpeed = 3;
 
 };
 
