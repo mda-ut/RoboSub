@@ -36,7 +36,7 @@ void SimObject::update(float dt){
                     deltaRot = 360 + deltaRot;
                 }
             }
-            rot.Y += std::copysign(maxRotSpeed*0.33, deltaRot);
+            rot.Y += std::copysign(maxRotSpeed*dt, deltaRot);
             node->setRotation(rot);
         }
     }
