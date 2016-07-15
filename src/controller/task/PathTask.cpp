@@ -1,26 +1,90 @@
 #include "PathTask.h"
 #include "Timer.h"
-
 #include <math.h>
+#include <iostream>
+#include "opencv/highgui.h"
+#include "opencv/cv.h"
+#include "chrono"
+#include "thread"
+#include <cmath>
 
-PathTask::PathTask() {
-    moving = false;
-    alignThreshold = 75;
-}
 
-PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask) {
-    this->cameraModel = dynamic_cast<CameraModel*>(cameraModel);
-    this->turnTask = turnTask;
-    this->speedTask = speedTask;
 
-    moving = false;
-    alignThreshold = 75;
-}
+using namespace cv;
+using namespace std;
 
+
+//The destructor erases logs from memory
+//new task should be paired with delete all the time.
 PathTask::~PathTask() {
     delete logger;
 }
 
+
+/**
+ * This function calculates the length of the line between 2 points
+ * using pythagorean theorem
+ */
+static double lineLength (cv::Point p1, cv::Point p2) {
+    float side= sqrt(pow(p1.x-p2.x,2.0)+(pow(p1.y-p2.y,2.0)));
+    return side;
+}
+
+
+/**
+ * Helper function to display text in the center of a contour
+ */
+void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour){
+    int fontface = cv::FONT_HERSHEY_SIMPLEX;
+    double scale = 0.4;
+    int thickness = 1;
+    int baseline = 0;
+
+    cv::Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
+    cv::Rect r = cv::boundingRect(contour);
+
+    cv::Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
+    cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), CV_FILLED);
+    cv::putText(im, label, pt, fontface, scale, CV_RGB(0,0,0), thickness, 8);
+}
+
+/**
+ * Helper function to find maximum side out of sides
+ *
+ */
+int maxSide(std::vector<cv::Point> approx){
+    int curMax = 0;
+    int i;
+    for (i = 0; i < 4; i++){
+        if (lineLength(approx[i], approx[(i+1) % 4]) > lineLength(approx[curMax], approx[(curMax+1) % 4])){
+            curMax = i;
+        }
+    }
+    return curMax;
+
+}
+
+
+
+
+/**
+ * What is this?
+ * I know we use it for turn task
+ *
+ */
+PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask) {
+    this->cameraModel = dynamic_cast<CameraModel*>(cameraModel);
+    this->turnTask = turnTask;
+    this->speedTask = speedTask;
+    moving = false;
+    alignThreshold = 75;
+}
+
+
+/**
+ * Do we use this?
+ *
+ */
 void PathTask::setSpeed(float amount) {
     speedTask->setTargetSpeed(amount);
     speedTask->execute();
@@ -32,18 +96,32 @@ void PathTask::setSpeed(float amount) {
     logger->info("Speed set to " + std::to_string(amount));
 }
 
+/**
+ * Do we use this?
+ *
+ */
 void PathTask::stop() {
     // Stop
     setSpeed(0);
 }
 
+/**
+ * James' function for rotating using Turntask
+ * takes input in ******degrees********
+ *
+ */
 void PathTask::rotate(float angle) {
     logger->debug("Rotating sub by " + std::to_string(angle) + " degrees");
     turnTask->setYawDelta(angle);
     turnTask->execute();
-    usleep(5000000);
+    usleep(500000);
 }
 
+/**
+ * Do we use this?
+ * James' function
+ *
+ */
 void PathTask::moveTo(cv::Point2f pos) {
     //TODO: Log this with useful debugs
     // Pretty much in line
@@ -66,206 +144,144 @@ void PathTask::moveTo(cv::Point2f pos) {
     }
 }
 
+
+/**
+ *The actual pathtask
+ *
+ */
 void PathTask::execute() {
-    // Load properties file
+
+    // Load properties
     PropertyReader* propReader;
     Properties* settings;
     propReader = new PropertyReader("settings/path_task_settings.txt");
     settings = propReader->load();
 
-    int timeOut = std::stoi(settings->getProperty("TIMEOUT"));
-    forwardSpeed = std::stoi(settings->getProperty("FORWARD_SPEED"));
-
-    logger->info("Starting Path Task");
-
-    ///TODO INSERT HSV VALUES HERE
     ImgData* data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
-    //old hsv settings: 5, 105, 59, 0, 237
-    HSVFilter hsvf(14, 33, 0, 231, 102, 255);
-    LineFilter lf;
-    // looking for 1 rectangle
-    ShapeFilter sf(1, 1);
+    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control", basically an ajustable HSV filter
 
-    imgHeight = data->getImg().size().height;
-    imgWidth = data->getImg().size().width;
+     //parameters to distinguish orange from other colors: hardcoded.
+     int iLowH = std::stoi(settings->getProperty("LOWH"));
+     int iHighH = std::stoi(settings->getProperty("HIGHH"));
 
-    bool orangeFound = false;
-    bool lookAround = false;
-    bool lineFound = false;
-    bool first = true;
+     int iLowS =std::stoi(settings->getProperty("LOWS"));
+     int iHighS = std::stoi(settings->getProperty("HIGHS"));
 
-//    cv::namedWindow("hsv", CV_WINDOW_AUTOSIZE);
+     int iLowV = std::stoi(settings->getProperty("LOWV"));
+     int iHighV = std::stoi(settings->getProperty("HIGHV"));
 
-    Timer timer;
-    timer.start();
-    while (!done && timer.getTimeElapsed() < timeOut) {
-        // If its moving, let it move for a bit then continue the program
-        if (moving) {
-            usleep (100000);
-            moving = false;
-            continue;
-        }
-        delete data;
-        data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
-        hsvf.filter(data);
+     //Create trackbars in "Control" window
+     createTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
+     createTrackbar("HighH", "Control", &iHighH,179);
+     createTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
+     createTrackbar("HighS", "Control", &iHighS, 255);
+     createTrackbar("LowV", "Control", &iLowV, 255);//Value (0 - 255)
+     createTrackbar("HighV", "Control", &iHighV, 255);
 
-        //cv::imshow("hsv", data->getImg());
+     //Capture a temporary image from the camera
+     Mat imgTmp;
+//     cap.read(imgTmp);
 
-        if (!orangeFound) {
-            // Step 1: look for orange, if found, turn to follow it
+     cv::namedWindow("imgThresholded",CV_WINDOW_AUTOSIZE);
+     cv::moveWindow("imgThresholded", 400, 500);
+     cv::namedWindow("HSV",CV_WINDOW_AUTOSIZE);
+     cv::moveWindow("HSV", 100, 200);
 
-            // Look for orange
-            std::vector<cv::Point2f> massCenters = sf.findMassCenter(data->getImg());
-            if (massCenters.size() > 0) {
-                logger->info("Found orange.  Moving to orange mass");
-                // Move to orange
-                moveTo(massCenters.at(0));
-            } else {
-                // If no orange found, move forwards
-                logger->debug("No orange mass found");
-                setSpeed(forwardSpeed);
-            }
+     while (true){
+         delete data;
+         data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
 
-            // If we see lines, then move to step 2
-            bool lines = lf.filter(data);
-            bool rect = sf.filter(data);
-            if (lines || rect) {
-                orangeFound = true;
-                if (lines) {
-                    logger->info("Found lines from orange segmentation");
+         Mat imgOriginal;
+         logger->trace("Got image from camera");
+         imgOriginal = data->getImg();
+
+         Mat imgHSV;
+         Mat imgThresholded;
+         cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+         inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+
+         imshow("HSV", imgHSV);
+
+         //morphological opening (removes small objects from the foreground)
+         erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+         dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+         //morphological closing (removes small holes from the foreground)
+         dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+         erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+
+          logger->trace("Thresholded input");
+
+
+         // Use Canny instead of threshold to catch squares with gradient shading
+         //canny algorithm is an ubedge detector
+         cv::Mat bw;
+         cv::Canny(imgThresholded, bw, 10, 50, 5);
+         std::vector<std::vector<cv::Point> > contoursNew;
+         cv::findContours(bw.clone(), contoursNew, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+         std::vector<cv::Point> approx;
+
+
+         //imshow("imgThresholded", bw);
+
+         for (int i = 0; i < contoursNew.size(); i++){
+
+             // Approximate contour with accuracy proportional
+             // to the contour perimeter
+             cv::approxPolyDP(cv::Mat(contoursNew[i]), approx, cv::arcLength(cv::Mat(contoursNew[i]), true)*0.02, true);
+
+             // Skip small or non-convex objects CS is this actually working???
+             if (std::fabs(cv::contourArea(contoursNew[i])) < 100 || !cv::isContourConvex(approx))
+                continue;
+
+             // draw approx on the img threshold screen
+             for (int i = 0; i < approx.size(); i++){
+                 cv::circle(bw, approx.at(i), 5, Scalar(255,0,0));
+             }
+
+//             imshow("imgThresholded", bw);
+
+             /**
+              *orient relative to the sub IF a rectangle shape has been found
+             *
+             */
+             if (approx.size() == 4 ){
+                int maxS = maxSide(approx);
+
+                /**
+                 *Do math to find the angle relative to vertical of the max side
+                *
+                */
+
+                logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%4));
+                float dx=approx[maxS].x - approx[(maxS+1)%4].x;
+                logger->debug("dx "+ std::to_string(dx));
+                float hyp=lineLength(approx[maxS], approx[(maxS+1)%4]);
+                logger->debug("hypoteneuse "+ std::to_string(hyp));
+                float ajusterAngle=(asin(dx/hyp)*180/(2*M_PI));
+
+                //then if you know that the difference in
+                //y is negative, then reverse the angle.
+                if ((approx[maxS].y - approx[(maxS+1)%4].y)<0){
+                    ajusterAngle=-1*ajusterAngle;
                 }
-                if (rect) {
-                    logger->info("Found rectange from orange segmentation");
-                }
-            }
-        } else if (lookAround) {
-            // Step 3 (Panning): if parallel lines couldnt be found
-            // look 45 degrees left, then 90 degrees right (45 from start)
-            // if still cant find anything, then move forward then repeat
 
-            logger->info("Panning");
-            setSpeed(forwardSpeed);
-            // 0 = found lines; 0 = false
-            if (!lf.filter(data)) {
-                // pauses whatever it's doing and goes back to looking for lines
-                lookAround = false;
-            }
-            if (timer.getTimeElapsed() > timeOut) {
-                done = true;
-                logger->info("Failed to find path");
-                // FAILED TO LOOK FOR PATH
-            }
-        } else {
-            // Step 2: follow the lines found
-            if (sf.filter(data)) {
-                // Check for rectangles
-                logger->info("Rectangle found");
-                cv::RotatedRect rr = sf.getRect()[0];
-                //moveTo(rr.center);
-                if (first) {
-                    logger->info("Stopping");
-                    setSpeed(-forwardSpeed);
-                    usleep(2000000);
-                    setSpeed(0);
-                    first = false;
-                }
-                usleep(500000);
-                if (std::abs((int)std::round(rr.angle)) % 90 < std::stoi(settings->getProperty("RECTANGLE_ANGLE_THRESHOLD"))) {
-                    logger->info("Aligned with rectangle.  Moving forward");
-                    setSpeed(forwardSpeed);
-                } else {
-                    logger->info("Trying to align to rectangle");
-                    rotate(rr.angle);
-                    usleep(5000000);
-                }
-            } else {
-                // Not tested yet
-                // Check for lines
-                logger->debug("Looking for lines");
-                lf.filter(data);
-                std::vector<std::vector<float>> align(2);
-                std::vector<std::vector<float>> allLines = lf.getlineEq();
-                bool brk = false;
-                bool alignment = false;
-                for (unsigned int i = 0; i < allLines.size(); i++) {
-                    //find 2 lines with parallel slope, and follow them
-                    //if 2 lines horizontal, rotate 90 degrees
-                    //if 1 line horizontal, start ///not sure if needed
+                logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
+                rotate(-1*ajusterAngle);
+                cv::Mat imgLines = imgOriginal.clone();
+                line(imgLines, approx[0], approx[1], Scalar(0,0,255), 2);
+                line(imgLines, approx[1], approx[2], Scalar(0,0,255), 2);
+                line(imgLines, approx[2], approx[3], Scalar(0,0,255), 2);
+                line(imgLines, approx[3], approx[0], Scalar(0,0,255), 2);
+                imshow("contours", imgLines);
 
-                    //see horz line -> horizInSight = true
-                    //no see horz line anymore -> horzInSight = false, startPath = true
-                    //see horz line agian -> horzInSight = true
-                    //no see horz line -> finPath = true;
-                    //go straight in all of 4 above statements
+             }
 
-                    for (unsigned int n = i; n < allLines.size(); n++) {
-                        // check the difference in slope
-                        //TODO: Change this line to divide the slopes instead of subtract.  Do error checking for infinity and divide by zero
-                        float temp;
-                        try{
-                            if (allLines[i][0] == INFINITY || allLines[n][0] == INFINITY
-                                    || allLines[n][0] == 0){
-                                temp = 5;
-                            }else
-                                temp = std::abs(allLines[i][0] / allLines[n][0] - 1);
-                        }catch (...){
-                            logger->debug("Error");
-                            temp = 5;
-                        }
+         }
+         imshow("imgThresholded", bw);
+     }
 
-                        // vertical lines or aprox parallel slope
-                        if ((allLines[i][0] == INFINITY && allLines[n][0] == INFINITY)
-                                || temp < 0.05){
-                            align[0] = allLines[i];
-                            align[1] = allLines[n];
-                            brk = true;
-                            alignment = true;
-                            break;
-                        }
-                    }
-                    if (brk) {
-                        break;
-                    }
-                    lookAround = true;
-                }
-                // executed once 2 parallel lines are found
-                if (alignment) {
-                    logger->debug("Current slope of " + std::to_string(align[0][0]));
-                    if (fabs(align[0][0]) > 99) {      // 999 = big slope value = vert line
-                        // if the average of the 2 x positions are within a threshold, move forward
-                        float avg = (align[0][2] + align[1][2]) / 2;
-                        if (std::abs(avg) < alignThreshold) {
-                            //the sub is aligned with the path
-                            setSpeed(50);
-                            logger->debug("Done");
-                            done = true;
-                        } else {
-                            //dont have to specifiy left or right cus avg is already the x position
-                            //rotate (atan2(imgHeight/4*3, avg-imgWidth/2) * 180/M_PI);
-                            setSpeed(forwardSpeed);
-                            /*
-                        if (avg < imgWidth/2) {  //TODO: Figure out left side value
-                            rotate (atan2(avg, imgHeight/4*3) * 180/M_PI);
-//                            move("Left", avg / 3);
-                        } else {
-                            rotate (atan2(avg, imgHeight/4*3) * 180/M_PI);
-//                            move("Right", avg / 3);
-                        }*/
-                        }
-                    } else {
-                        //normal line
-                        if (align[0][0] > 0)    //positive slope, align to the right side
-                            rotate(-(atan(align[0][0]) * 180 / M_PI - 90));//takes any slope gets angle (negative because of how sub looks at axes
-                        else {                    //negative slope, align to the left side
-                            rotate(-(atan(align[0][0]) * 180 / M_PI + 90));
-                        }
-                    }
-                    lineFound = true;
-                }
-            }
-        }
-        usleep(33000);    //sleep for 33ms -> act 30 times/sec
-
-    }
-    logger->info("Path Task complete");
+     logger->info("EXITING");
+    return;
 }
