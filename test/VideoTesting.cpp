@@ -1,13 +1,13 @@
 #include "VideoTesting.h"
 
 VideoTesting::VideoTesting(const std::string fileName){
-    cap.open(fileName);
-    if( !cap.isOpened()){
-         std::cout << "Cannot open the video file" << std::endl;
-         return;
-    }
-    double count = cap.get(CV_CAP_PROP_FRAME_COUNT); //get the frame count
-    cap.set(CV_CAP_PROP_POS_FRAMES,count-1); //Set index to last frame
+        cap.open(fileName);
+        if( !cap.isOpened()){
+             std::cout << "Cannot open the video file" << std::endl;
+             return;
+        }
+        double count = cap.get(CV_CAP_PROP_FRAME_COUNT); //get the frame count
+        cap.set(CV_CAP_PROP_POS_FRAMES,count-1); //Set index to last frame
 }
 
 VideoTesting::VideoTesting(int deviceID) {
@@ -159,12 +159,12 @@ void VideoTesting::run(int Type){
     cv::namedWindow("Line Filtered",CV_WINDOW_AUTOSIZE);
     cv::namedWindow("Canny", CV_WINDOW_AUTOSIZE);
 
-    if (Type == 2){
+    if (Type == 3){
     cv::moveWindow("Orginal", 1400, 50);           //reading from photo
     cv::moveWindow("HSV Filtered", 1000, 50);
     cv::moveWindow("Line Filtered", 600, 50);
     cv::moveWindow("Canny", 100, 50);}
-    else if (Type == 1){
+    else if (Type == 2){
     cv::moveWindow("Orginal", 1200, 50);           //reading from camera
     cv::moveWindow("HSV Filtered", 1200, 500);
     cv::moveWindow("Line Filtered", 600, 50);
@@ -203,21 +203,29 @@ void VideoTesting::run(int Type){
     ShapeFilter sf(1, 1);
     BlurFilter bf(2, 0.2f);
     BlurFilter bf2(1, 0.4f);
-    if (Type == 0)
-        frame = cv::imread("test_path.png");       //img
+    if (Type == 2){
+        cap.read(frame);
+        if (frame.data == NULL){
+            printf("Failed to read image\n");
+            return;
+        }
+    }
     cv::Scalar color = cv::Scalar(255, 0, 0);
 
     while (1){
-        //contour = cv::Mat::zeros(frame.size(), CV_8UC3);
-        if (Type == 2)
+        contour = cv::Mat::zeros(frame.size(), CV_8UC3);
+        if (Type == 0)
             frame = this->getNextFrame(); //video
-        if (Type == 1)
+        else if (Type == 1)
             frame = getNextCameraFrame(); //webcam
         contour = frame.clone();
-        if(frame.cols == 0)break;       //exit when there is no next fraame
+        if(frame.data == NULL){
+            printf("wtf\n");
+            break;       //exit when there is no next fraame
+        }
 
         //filtered = hf.filter(&frame);
-        filtered2 = HSVFilter(frame, iLowH, iHighH, iLowS, iHighS, iLowV, iHighV);
+//        filtered2 = HSVFilter(frame, iLowH, iHighH, iLowS, iHighS, iLowV, iHighV);
         filtered = HSVFilter(frame, iLowH, iHighH, iLowS, iHighS, iLowV, iHighV);
         //filtered = blur(filtered,max);
         //filtered = bf.filter(filtered2);
@@ -274,7 +282,8 @@ void VideoTesting::run(int Type){
         delete lineFiltered;*/
     }
     //cvReleaseCapture(&capture);
-    cap.release();
+    if (cap.isOpened())
+        cap.release();
     std::cout << "End of video feed" << std::endl;
 }
 

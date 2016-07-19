@@ -144,7 +144,6 @@ void PathTask::moveTo(cv::Point2f pos) {
     }
 }
 
-
 /**
  *The actual pathtask
  *
@@ -187,7 +186,8 @@ void PathTask::execute() {
      cv::namedWindow("HSV",CV_WINDOW_AUTOSIZE);
      cv::moveWindow("HSV", 100, 200);
 
-     while (true){
+     bool angleThresholdMet = false;
+     while (!angleThresholdMet){
          delete data;
          data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
 
@@ -243,11 +243,26 @@ void PathTask::execute() {
 //             imshow("imgThresholded", bw);
 
              /**
+              *Do you see orange?
+             *
+             */
+
+             /**
               *orient relative to the sub IF a rectangle shape has been found
              *
              */
-             if (approx.size() == 4 ){
+             if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
                 int maxS = maxSide(approx);
+
+                /**
+                 *orient into the center of the screen
+                 * if the path is NOT within middle 20%
+                *
+                */
+                //find distance between the contour and the centre
+//                slide(deltaX)
+
+
 
                 /**
                  *Do math to find the angle relative to vertical of the max side
@@ -268,6 +283,7 @@ void PathTask::execute() {
                 }
 
                 logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
+                if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
                 rotate(-1*ajusterAngle);
                 cv::Mat imgLines = imgOriginal.clone();
                 line(imgLines, approx[0], approx[1], Scalar(0,0,255), 2);
