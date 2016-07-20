@@ -7,8 +7,9 @@
 #include "chrono"
 #include "thread"
 #include <cmath>
-
-
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 using namespace cv;
 using namespace std;
@@ -78,6 +79,7 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
     this->speedTask = speedTask;
     moving = false;
     alignThreshold = 75;
+    forwardSpeed = 20;
 }
 
 
@@ -88,8 +90,8 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
 void PathTask::setSpeed(float amount) {
     speedTask->setTargetSpeed(amount);
     speedTask->execute();
+    moving = true;
     if (amount != 0) {
-        moving = true;
     } else {
         moving = false;
     }
@@ -135,11 +137,13 @@ void PathTask::moveTo(cv::Point2f pos) {
             setSpeed(-forwardSpeed);
         }
     } else {
-        //float ang = atan2(pos.y - imgHeight / 2, pos.x - imgWidth / 2) * 180 / M_PI;
-        float ang = 5;
+        printf("Move to: %f %f\n", pos.y, pos.x);
+        float ang = atan2(pos.y - imgHeight / 2, pos.x - imgWidth / 2) * 180 / M_PI;
+//        float ang = 5;
         ang *= std::abs(pos.x-imgWidth/2)/(pos.x-imgWidth/2);
-        logger->info("Rotating " + std::to_string(ang) + " degrees");
+        logger->info("moveto Rotating " + std::to_string(ang) + " degrees");
         rotate(ang);
+        sleep(1);
         //setSpeed(forwardSpeed);
     }
 }
@@ -200,7 +204,6 @@ void PathTask::execute() {
          cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
          inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
 
-         imshow("HSV", imgHSV);
 
          //morphological opening (removes small objects from the foreground)
          erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
@@ -218,21 +221,43 @@ void PathTask::execute() {
          //canny algorithm is an ubedge detector
          cv::Mat bw;
          cv::Canny(imgThresholded, bw, 10, 50, 5);
-         std::vector<std::vector<cv::Point> > contoursNew;
-         cv::findContours(bw.clone(), contoursNew, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+         std::vector<std::vector<cv::Point> > contours;
+         cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
          std::vector<cv::Point> approx;
 
 
-         //imshow("imgThresholded", bw);
+         // Get the moments
+           vector<Moments> mu(contours.size() );
+           for( size_t i = 0; i < contours.size(); i++ )
+              { mu[i] = moments( contours[i], false ); }
 
-         for (int i = 0; i < contoursNew.size(); i++){
+           //  Get the mass centers:
+             vector<Point2f> mc( contours.size() );
+             for( size_t i = 0; i < contours.size(); i++ )
+                { mc[i] = Point2f( static_cast<float>(mu[i].m10/mu[i].m00) , static_cast<float>(mu[i].m01/mu[i].m00) ); }
 
+
+            cv::circle(imgHSV, mc[0], 5, Scalar(180,105,255));
+
+
+            imshow("HSV", imgHSV);
+              imshow("bw", bw);
+
+             /**
+              *Do you see a shape
+             *
+             */
+
+
+         for (int i = 0; i < contours.size(); i++){
+
+             printf("Contours size: %d\n", contours.size());
              // Approximate contour with accuracy proportional
              // to the contour perimeter
-             cv::approxPolyDP(cv::Mat(contoursNew[i]), approx, cv::arcLength(cv::Mat(contoursNew[i]), true)*0.02, true);
+             cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects CS is this actually working???
-             if (std::fabs(cv::contourArea(contoursNew[i])) < 100 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) < 100 || !cv::isContourConvex(approx))
                 continue;
 
              // draw approx on the img threshold screen
@@ -242,17 +267,37 @@ void PathTask::execute() {
 
 //             imshow("imgThresholded", bw);
 
+
              /**
-              *Do you see orange?
+              * Are we close enough?
              *
              */
+            bool closeEnough=false;
+            cv::Point origin( imgWidth/2, imgHeight/2);
+            if (lineLength(mc[0], origin)<50) {
+                closeEnough=true;
+            }
+
+             /**
+              *Move to the centre of the contour detected
+              * IF we are not close enough
+             *
+             */
+
+             if (!closeEnough){
+                 //if we aren't close enough after moving
+                 //go back to the beginning of loop to try again
+                 moveTo(mc[0]);
+                 continue;
+             }
+
 
              /**
               *orient relative to the sub IF a rectangle shape has been found
              *
              */
              if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
-                int maxS = maxSide(approx);
+
 
                 /**
                  *orient into the center of the screen
@@ -269,12 +314,14 @@ void PathTask::execute() {
                 *
                 */
 
+                int maxS = maxSide(approx);
+
                 logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%4));
                 float dx=approx[maxS].x - approx[(maxS+1)%4].x;
                 logger->debug("dx "+ std::to_string(dx));
                 float hyp=lineLength(approx[maxS], approx[(maxS+1)%4]);
                 logger->debug("hypoteneuse "+ std::to_string(hyp));
-                float ajusterAngle=(asin(dx/hyp)*180/(2*M_PI));
+                float ajusterAngle=(asin(dx/hyp)*180/(M_PI));
 
                 //then if you know that the difference in
                 //y is negative, then reverse the angle.
@@ -283,7 +330,7 @@ void PathTask::execute() {
                 }
 
                 logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
-                if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
+                //if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
                 rotate(-1*ajusterAngle);
                 cv::Mat imgLines = imgOriginal.clone();
                 line(imgLines, approx[0], approx[1], Scalar(0,0,255), 2);
@@ -295,7 +342,7 @@ void PathTask::execute() {
              }
 
          }
-         imshow("imgThresholded", bw);
+         //imshow("imgThresholded", bw);
      }
 
      logger->info("EXITING");
