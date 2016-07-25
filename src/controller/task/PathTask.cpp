@@ -15,6 +15,7 @@ using namespace cv;
 using namespace std;
 
 
+
 //The destructor erases logs from memory
 //new task should be paired with delete all the time.
 PathTask::~PathTask() {
@@ -69,8 +70,7 @@ int maxSide(std::vector<cv::Point> approx){
 
 
 /**
- * What is this?
- * I know we use it for turn task
+ * This defines the task we draw upon
  *
  */
 PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask) {
@@ -80,6 +80,7 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
     moving = false;
     alignThreshold = 75;
     forwardSpeed = 20;
+
 }
 
 
@@ -120,16 +121,19 @@ void PathTask::rotate(float angle) {
 }
 
 /**
- * Do we use this?
- * James' function
+ *
+ * James' function to move to a select place
  *
  */
 void PathTask::moveTo(cv::Point2f pos) {
-    //TODO: Log this with useful debugs
-    // Pretty much in line
-    if (std::abs(pos.x - imgWidth / 2) < alignThreshold) {
+    //This assumes that (0,0) is in top left
+    float imgHeightF = static_cast<float>(imgHeight);
+    float imgWidthF = static_cast<float>(imgWidth);
+    printf("POSITION: %f %f\n", pos.y, pos.x);
+    printf("START: %f %f\n", pos.y-imgHeightF/2, pos.x-imgWidthF/2);
+    if (std::abs(pos.x - imgWidthF / 2) < alignThreshold) {
         //float distance = std::sqrt(pos.x * pos.x + pos.y * pos.y);
-        if (pos.y - imgHeight / 2 > 0) {
+        if (pos.y - imgHeightF / 2 <0) {
             logger->info("Moveto moving forwards");
             setSpeed(forwardSpeed);
         } else {
@@ -138,9 +142,13 @@ void PathTask::moveTo(cv::Point2f pos) {
         }
     } else {
         printf("Move to: %f %f\n", pos.y, pos.x);
-        float ang = atan2(pos.y - imgHeight / 2, pos.x - imgWidth / 2) * 180 / M_PI;
+        float ang = atan2(-1*(pos.x - imgWidthF / 2), (pos.y - imgHeightF/ 2)) * 180 / M_PI;
+
 //        float ang = 5;
-        ang *= std::abs(pos.x-imgWidth/2)/(pos.x-imgWidth/2);
+        if ((pos.y - imgHeightF/ 2)>0){
+            //if y displacement is positive, the angle you need to move is greater than 90
+            ang=ang-(ang/std::abs(ang)*M_PI);
+        }
         logger->info("moveto Rotating " + std::to_string(ang) + " degrees");
         rotate(ang);
         sleep(1);
@@ -198,6 +206,9 @@ void PathTask::execute() {
          Mat imgOriginal;
          logger->trace("Got image from camera");
          imgOriginal = data->getImg();
+         cv::Size s = imgOriginal.size();
+         imgWidth = s.width;
+         imgHeight = s.height;
 
          Mat imgHSV;
          Mat imgThresholded;
@@ -251,7 +262,7 @@ void PathTask::execute() {
 
          for (int i = 0; i < contours.size(); i++){
 
-             printf("Contours size: %d\n", contours.size());
+             //printf("Contours size: %d\n", contours.size());
              // Approximate contour with accuracy proportional
              // to the contour perimeter
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
@@ -269,36 +280,10 @@ void PathTask::execute() {
 
 
              /**
-              * Are we close enough?
-             *
-             */
-            bool closeEnough=false;
-            cv::Point origin( imgWidth/2, imgHeight/2);
-            if (lineLength(mc[0], origin)<50) {
-                closeEnough=true;
-            }
-
-             /**
-              *Move to the centre of the contour detected
-              * IF we are not close enough
-             *
-             */
-
-             if (!closeEnough){
-                 //if we aren't close enough after moving
-                 //go back to the beginning of loop to try again
-                 moveTo(mc[0]);
-                 continue;
-             }
-
-
-             /**
               *orient relative to the sub IF a rectangle shape has been found
              *
              */
              if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
-
-
                 /**
                  *orient into the center of the screen
                  * if the path is NOT within middle 20%
@@ -306,9 +291,6 @@ void PathTask::execute() {
                 */
                 //find distance between the contour and the centre
 //                slide(deltaX)
-
-
-
                 /**
                  *Do math to find the angle relative to vertical of the max side
                 *
@@ -339,10 +321,33 @@ void PathTask::execute() {
                 line(imgLines, approx[3], approx[0], Scalar(0,0,255), 2);
                 imshow("contours", imgLines);
 
-             }
+             }//if loop end
 
-         }
+         }//for loop
          //imshow("imgThresholded", bw);
+
+         /**
+          * Are we close enough?
+         *
+         */
+        bool closeEnough=false;
+        cv::Point origin( imgWidth/2, imgHeight/2);
+        if (lineLength(mc[0], origin)<50) {
+            closeEnough=true;
+        }
+
+         /**
+          *Move to the centre of the contour detected
+          * IF we are not close enough
+         *
+         */
+
+         if (!closeEnough){
+             //if we aren't close enough
+             //go back to the beginning of loop to try again
+             moveTo(mc[0]);
+             continue;
+         }
      }
 
      logger->info("EXITING");
