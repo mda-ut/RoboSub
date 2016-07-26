@@ -15,6 +15,7 @@ using namespace cv;
 using namespace std;
 
 
+
 //The destructor erases logs from memory
 //new task should be paired with delete all the time.
 PathTask::~PathTask() {
@@ -55,9 +56,10 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
  */
 int maxSide(std::vector<cv::Point> approx){
     int curMax = 0;
+    int numVertices=approx.size();
     int i;
-    for (i = 0; i < 4; i++){
-        if (lineLength(approx[i], approx[(i+1) % 4]) > lineLength(approx[curMax], approx[(curMax+1) % 4])){
+    for (i = 0; i < numVertices; i++){
+        if (lineLength(approx[i], approx[(i+1) % numVertices]) > lineLength(approx[curMax], approx[(curMax+1) % numVertices])){
             curMax = i;
         }
     }
@@ -66,11 +68,9 @@ int maxSide(std::vector<cv::Point> approx){
 }
 
 
-
-
 /**
- * What is this?
- * I know we use it for turn task
+ * This defines the task we draw upon
+ * 'Constructor'
  *
  */
 PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask) {
@@ -78,7 +78,7 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
     this->turnTask = turnTask;
     this->speedTask = speedTask;
     moving = false;
-    alignThreshold = 75;
+    alignThreshold = 50;
     forwardSpeed = 20;
 }
 
@@ -96,6 +96,7 @@ void PathTask::setSpeed(float amount) {
         moving = false;
     }
     logger->info("Speed set to " + std::to_string(amount));
+
 }
 
 /**
@@ -120,31 +121,36 @@ void PathTask::rotate(float angle) {
 }
 
 /**
- * Do we use this?
- * James' function
+ *
+ * James' function to move to a select place
  *
  */
 void PathTask::moveTo(cv::Point2f pos) {
-    //TODO: Log this with useful debugs
-    // Pretty much in line
-    if (std::abs(pos.x - imgWidth / 2) < alignThreshold) {
+    //This assumes that (0,0) is in top left
+    float imgHeightF = static_cast<float>(imgHeight);
+    float imgWidthF = static_cast<float>(imgWidth);
+    printf("POSITION: %f %f\n", pos.y, pos.x);
+    printf("START: %f %f\n", pos.y-imgHeightF/2, pos.x-imgWidthF/2);
+    if (std::abs(pos.x - imgWidthF / 2) < alignThreshold) {
         //float distance = std::sqrt(pos.x * pos.x + pos.y * pos.y);
-        if (pos.y - imgHeight / 2 > 0) {
+        if (pos.y - imgHeightF / 2 <0) {
             logger->info("Moveto moving forwards");
             setSpeed(forwardSpeed);
         } else {
             logger->info("Moveto moving backwards");
             setSpeed(-forwardSpeed);
         }
-    } else {
+    }
+    else {
         printf("Move to: %f %f\n", pos.y, pos.x);
-        float ang = atan2(pos.y - imgHeight / 2, pos.x - imgWidth / 2) * 180 / M_PI;
-//        float ang = 5;
-        ang *= std::abs(pos.x-imgWidth/2)/(pos.x-imgWidth/2);
+        float ang = atan2(-1*(pos.x - imgWidthF / 2), (pos.y - imgHeightF/ 2)) * 180 / M_PI;
+        if ((pos.y - imgHeightF/ 2)>0){
+            //if y displacement is positive, the angle you need to move is greater than 90
+            ang=ang-(ang/std::abs(ang)*M_PI);
+        }
         logger->info("moveto Rotating " + std::to_string(ang) + " degrees");
         rotate(ang);
         sleep(1);
-        //setSpeed(forwardSpeed);
     }
 }
 
@@ -153,7 +159,11 @@ void PathTask::moveTo(cv::Point2f pos) {
  *
  */
 void PathTask::execute() {
-
+   float ajusterAngle=0;
+    int accumulator = 0;
+    float accMassX = 0;
+    float accMassY = 0;
+    float accAngle = 0;
     // Load properties
     PropertyReader* propReader;
     Properties* settings;
@@ -191,13 +201,21 @@ void PathTask::execute() {
      cv::moveWindow("HSV", 100, 200);
 
      bool angleThresholdMet = false;
+
      while (!angleThresholdMet){
+
          delete data;
          data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
+        accumulator++;
 
          Mat imgOriginal;
          logger->trace("Got image from camera");
          imgOriginal = data->getImg();
+         cv::Size s = imgOriginal.size();
+         imgWidth = s.width;
+         imgHeight = s.height;
+         float imgHeightF = static_cast<float>(imgHeight);
+         float imgWidthF = static_cast<float>(imgWidth);
 
          Mat imgHSV;
          Mat imgThresholded;
@@ -223,6 +241,7 @@ void PathTask::execute() {
          cv::Canny(imgThresholded, bw, 10, 50, 5);
          std::vector<std::vector<cv::Point> > contours;
          cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
          std::vector<cv::Point> approx;
 
 
@@ -239,7 +258,6 @@ void PathTask::execute() {
 
             cv::circle(imgHSV, mc[0], 5, Scalar(180,105,255));
 
-
             imshow("HSV", imgHSV);
               imshow("bw", bw);
 
@@ -248,10 +266,11 @@ void PathTask::execute() {
              *
              */
 
-
+        printf("contours.size %d\n", contours.size());
+       // printf("contours at 0, %d\n",contours[0]);
          for (int i = 0; i < contours.size(); i++){
 
-             printf("Contours size: %d\n", contours.size());
+             //printf("Contours size: %d\n", contours.size());
              // Approximate contour with accuracy proportional
              // to the contour perimeter
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
@@ -261,35 +280,11 @@ void PathTask::execute() {
                 continue;
 
              // draw approx on the img threshold screen
-             for (int i = 0; i < approx.size(); i++){
-                 cv::circle(bw, approx.at(i), 5, Scalar(255,0,0));
-             }
+//             for (int i = 0; i < approx.size(); i++){
+//                 cv::circle(bw, approx.at(i), 5, Scalar(255,0,0));
+//             }
 
 //             imshow("imgThresholded", bw);
-
-
-             /**
-              * Are we close enough?
-             *
-             */
-            bool closeEnough=false;
-            cv::Point origin( imgWidth/2, imgHeight/2);
-            if (lineLength(mc[0], origin)<50) {
-                closeEnough=true;
-            }
-
-             /**
-              *Move to the centre of the contour detected
-              * IF we are not close enough
-             *
-             */
-
-             if (!closeEnough){
-                 //if we aren't close enough after moving
-                 //go back to the beginning of loop to try again
-                 moveTo(mc[0]);
-                 continue;
-             }
 
 
              /**
@@ -298,40 +293,30 @@ void PathTask::execute() {
              */
              if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
 
-
-                /**
-                 *orient into the center of the screen
-                 * if the path is NOT within middle 20%
-                *
-                */
                 //find distance between the contour and the centre
 //                slide(deltaX)
-
-
-
-                /**
-                 *Do math to find the angle relative to vertical of the max side
+                /*
+                 *Find the angle relative to vertical of the max side
                 *
                 */
-
                 int maxS = maxSide(approx);
-
-                logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%4));
-                float dx=approx[maxS].x - approx[(maxS+1)%4].x;
+                int numVertices=approx.size();
+                logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%numVertices));
+                float dx=approx[maxS].x - approx[(maxS+1)%numVertices].x;
                 logger->debug("dx "+ std::to_string(dx));
-                float hyp=lineLength(approx[maxS], approx[(maxS+1)%4]);
+                float hyp=lineLength(approx[maxS], approx[(maxS+1)%numVertices]);
                 logger->debug("hypoteneuse "+ std::to_string(hyp));
-                float ajusterAngle=(asin(dx/hyp)*180/(M_PI));
+                ajusterAngle=(asin(dx/hyp)*180/(M_PI));
 
                 //then if you know that the difference in
                 //y is negative, then reverse the angle.
-                if ((approx[maxS].y - approx[(maxS+1)%4].y)<0){
+                if ((approx[maxS].y - approx[(maxS+1)%numVertices].y)<0){
                     ajusterAngle=-1*ajusterAngle;
                 }
 
                 logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
                 //if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
-                rotate(-1*ajusterAngle);
+
                 cv::Mat imgLines = imgOriginal.clone();
                 line(imgLines, approx[0], approx[1], Scalar(0,0,255), 2);
                 line(imgLines, approx[1], approx[2], Scalar(0,0,255), 2);
@@ -339,10 +324,60 @@ void PathTask::execute() {
                 line(imgLines, approx[3], approx[0], Scalar(0,0,255), 2);
                 imshow("contours", imgLines);
 
+             }//if loop end
+
+         }//for loop
+         //imshow("imgThresholded", bw);
+
+         /**
+          * Are we close enough?
+         *
+         */
+        bool closeEnough=false;
+        cv::Point origin( imgWidthF/2, imgHeightF/2);
+        if (lineLength(mc[0], origin)<30) {
+            closeEnough=true;
+            setSpeed(0);
+        }
+
+         /**
+          *Move to the centre of the contour detected
+          * IF we are not close enough
+         *
+         */
+
+         if (!closeEnough){
+             //if we aren't close enough
+             //go back to the beginning of loop to try again
+             printf("contours.size %d\n", contours.size());
+             accMassX += mc[0].x;
+             accMassY += mc[0].y;
+             if (accumulator == 15){
+                 cv::Point avgMass( accMassX/15, accMassY/15);
+                  moveTo(avgMass);
+                  accMassX = 0;
+                  accMassY = 0;
+                  accumulator = 0;
+                  accAngle = 0;
+
              }
 
          }
-         //imshow("imgThresholded", bw);
+         //rotating relative to the rectangle we have found.
+         else
+         {
+             accAngle += ajusterAngle;
+             if (accumulator == 15){
+                  accumulator = 0;
+                  rotate(-1*accAngle/15);
+                  accAngle = 0;
+                  accMassX = 0;
+                  accMassY = 0;
+
+             }
+
+
+         }
      }
 
      logger->info("EXITING");
