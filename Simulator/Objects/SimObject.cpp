@@ -26,7 +26,7 @@ void SimObject::update(float dt){
 
         float deltaRot = fmod(targetY - curY, 360);
         printf("target: %f, cur: %f, delta: %f\n", targetY, curY, deltaRot);
-        if (abs(deltaRot) < maxRotSpeed){
+        if (abs(deltaRot) < maxRotSpeed*dt){
             node->setRotation(targetRot);
         }else{
             if(abs(deltaRot) > 180){
@@ -38,6 +38,7 @@ void SimObject::update(float dt){
             }
             rot.Y += std::copysign(maxRotSpeed*dt, deltaRot);
             node->setRotation(rot);
+            SimLogger::Log("Sim rot: ", rot);
         }
     }
 
@@ -87,6 +88,9 @@ void SimObject::update(float dt){
     }
     vel += acc*dt;
     pos += vel;
+
+    if (targetDepth != 0)
+        pos.Y = targetDepth;
 
     //Logger::Log("Acc " + std::to_string(acc.Z*dt));
     //Logger::Log("Vel " + std::to_string(vel.Z));

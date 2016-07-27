@@ -52,11 +52,12 @@ Sim::Sim(void* c)
     objs.push_back(simSub);
 
     //Light and Fog
-    ILightSceneNode* light1 = smgr->addLightSceneNode( 0, core::vector3df(0,500,0), video::SColorf(0.3f,0.3f,0.3f), 50000.0f, 1 );
+    ILightSceneNode* light1 = smgr->addLightSceneNode( 0, core::vector3df(-420,200,450), video::SColorf(0.3f,0.3f,0.3f), 5000.0f, 1 );
+    light1->setRotation(core::vector3df(90,45,0));
     driver->setFog(video::SColor(0, 120,140,160), video::EFT_FOG_LINEAR, 20, 250, .001f, false, false);
     ISceneNode * scenenode = smgr->getRootSceneNode();
-    scenenode->setMaterialFlag(EMF_FOG_ENABLE, true);
-    light1->setMaterialFlag(EMF_FOG_ENABLE, true);
+//    scenenode->setMaterialFlag(EMF_LIGHTING, true);
+//    light1->setMaterialFlag(EMF_LIGHTING, true);
 
     //Load obstacles (need to be separated so that buoys can move)
     IAnimatedMesh* obsMesh = smgr->getMesh("assets/obstacles.3ds");
@@ -65,7 +66,7 @@ Sim::Sim(void* c)
     if (obsMesh) {
         obstacles = smgr->addOctreeSceneNode(obsMesh->getMesh(0), 0);
         obstacles->setMaterialFlag(EMF_FOG_ENABLE, true);
-        obstacles->setMaterialFlag(EMF_LIGHTING, true);
+//        obstacles->setMaterialFlag(EMF_LIGHTING, true);
         obstacles->setScale(core::vector3df(20,20,20));
         obstacles->setPosition(core::vector3df(0,0,0));
         obsSelector = smgr->createOctreeTriangleSelector(
@@ -102,7 +103,7 @@ Sim::Sim(void* c)
     camChilds[1] = smgr->addEmptySceneNode(cameras[1]);
     camChilds[1]->setPosition(vector3df(0,-1,0));
     //cameras[1]->setUpVector(vector3df(-1,0,0));
-    s->setPosition(vector3df(-200, 212, 443));
+    s->setPosition(vector3df(-400, 212, 443));
 
     //First vector input is the radius of the collidable object
     anim = smgr->createCollisionResponseAnimator(
@@ -159,8 +160,9 @@ int Sim::start(){
                 ih->update(frameDeltaTime, ss->getRot());
 
                 ss->setRot(ih->getRot());
-                //Logger::Log(so->getRot());
+//                SimLogger::Log(so->getPos());
                 ss->setAcc(ih->getAcc());
+                ss->setDepth(ih->getDepth());
                 ss->update(frameDeltaTime);
 
                 if (ih->IsKeyDown(irr::KEY_KEY_R)){

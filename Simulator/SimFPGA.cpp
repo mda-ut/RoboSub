@@ -17,15 +17,18 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
             IsKeyDown(irr::KEY_KEY_S) || IsKeyDown(irr::KEY_KEY_D) ||
             IsKeyDown(irr::KEY_KEY_Q) || IsKeyDown(irr::KEY_KEY_E) ||
             IsKeyDown(irr::KEY_SPACE) || IsKeyDown(irr::KEY_LSHIFT);
+
+    irr::core::vector3df forward;
+    forward.X = -cos(dir.Y*3.141589f/180.0f);
+    if (fabs(dir.Y) > 0){
+        float dZ = sin(dir.Y*3.141589f/180.0f);
+        forward.Z = dZ;
+    }
+    forward.normalize();
+    SimLogger::Log("Forward ", forward);
+
     if (useKey && keyDown){
         //input processing
-        irr::core::vector3df forward;
-        forward.X = -cos(dir.Y*3.141589f/180.0f);
-        if (fabs(dir.Y) > 0){
-            float dZ = sin(dir.Y*3.141589f/180.0f);
-            forward.Z = dZ;
-        }
-        forward.normalize();
         if(IsKeyDown(irr::KEY_KEY_W)){
             acc = forward*5;
         } else if(IsKeyDown(irr::KEY_KEY_S)) {
@@ -40,9 +43,11 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
             acc.Z = -forward.X*5;
         }
         if (IsKeyDown(irr::KEY_SPACE))
-            acc.Y = 5 ;
+//            acc.Y = 5 ;
+            targetDepth += 5;
         else if (IsKeyDown(irr::KEY_LSHIFT))
-            acc.Y = -5;
+//            acc.Y = -5;
+            targetDepth -= 5;
 
         if (IsKeyDown(irr::KEY_KEY_Q)){
             rot.Y += -50*dt;
@@ -50,14 +55,6 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
             rot.Y += 50*dt;
         }
     }else{
-        irr::core::vector3df forward;
-        forward.X = -cos(dir.Y*3.141589f/180.0f);
-        if (fabs(dir.Y) > 0){
-            float dZ = sin(dir.Y*3.141589f/180.0f);
-            forward.Z = dZ;
-        }
-        forward.normalize();
-
         const float maxAcc = 3;
         if (targetVel.getLengthSQ() == 0){
             acc *= 0;
@@ -68,8 +65,8 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
                 acc.Y = targetVel.Y;
                 acc.Z = targetVel.Z;
             }
-                acc.normalize();
-                acc *= maxAcc;
+            acc.normalize();
+            acc *= maxAcc;
         }
 
         acc = forward * acc.getLength();
@@ -91,6 +88,7 @@ float InputHandler::getDepth (){
 void InputHandler::setTargetSpeed(irr::core::vector3df target){
     if (!target.equals(targetVel)){
         targetVel = target;
+        SimLogger::Log("Target vel: ", target);
     }
 }
 void InputHandler::setTargetSpeed(float x, float y, float z){
