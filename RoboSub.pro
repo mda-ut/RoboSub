@@ -9,7 +9,7 @@ LIBS += -L/usr/local/lib \
 LIBS += -L$$PWD/Simulator/irrlicht-1.8.3/lib/Linux/ -lIrrlicht -lGLU -lGL -lXrandr -lXext -lX11
 
 CONFIG += c++11
-greaterThan(QT_MAJOR_VERSION,4): QT += widgets 3dcore 3drenderer 3dinput
+greaterThan(QT_MAJOR_VERSION,4): QT += widgets
 
 QMAKE_CXXFLAGS += -lrt
 
@@ -119,7 +119,8 @@ HEADERS += \
     Simulator/Objects/SimObject.h \
     Simulator/Objects/SimSub.h \
     Simulator/SimCam.h \
-    Simulator/SimFPGA.h
+    Simulator/SimFPGA.h \
+    Simulator/QtWindow.h
 
 SOURCES += src/Main.cpp \
            test/CollectionTEST.cpp \

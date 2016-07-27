@@ -73,6 +73,9 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
         }
 
         acc = forward * acc.getLength();
+        if (targetVel.X < 0) {
+            acc *= -1;
+        }
     }
 
 }

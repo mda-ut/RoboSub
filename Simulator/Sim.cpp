@@ -1,4 +1,5 @@
 #include "Sim.h"
+#include <unistd.h>
 
 
 //Sim::Sim(cv::Mat* frame, InputHandler* in, bool* r, bool* ta)
@@ -260,8 +261,10 @@ int Sim::start(){
 //        cv::imshow("down", *downFrame);
 //        cv::waitKey(1);
         delete image;
+        usleep(60000);
 
-    }
+    } //end of while loop
+
     smgr->drop();
     device->closeDevice();
     cap->threadAlive = (bool*)false;
