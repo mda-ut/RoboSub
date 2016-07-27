@@ -46,8 +46,8 @@ protected:
     float targetDepth = 0;
 
     const float maxRotSpeed = 20;
-    const float friction = 2.5f;
-    const float maxSpeed = 3;
+    const float friction = 1.f;
+    const float maxSpeed = 2;
 
 };
 

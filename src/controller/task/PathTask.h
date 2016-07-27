@@ -31,6 +31,7 @@ private:
 
     // distance in pixels considered to be in line with the sub
     float alignThreshold;
+    float rect_angle_threshold;
     int imgWidth, imgHeight;
 
     // Helper functions

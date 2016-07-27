@@ -22,6 +22,13 @@ void TurnTask::setYawDelta(int delta) {
     setYawAbsolute(*currentTargetYaw + delta);
 }
 
+void TurnTask::setYawCurrentDelta(int delta) {
+    FPGAData* fpga = dynamic_cast<FPGAData*>(fpgaModel->getStateData("raw"));
+    int currentYaw = fpga->getYaw();
+    logger->debug("current yaw is " + std::to_string(currentYaw));
+    setYawAbsolute(currentYaw + delta);
+}
+
 void TurnTask::setYawAbsolute(int newTargetYaw) {
     targetYaw = newTargetYaw;
 }

@@ -34,6 +34,8 @@ public:
 
     void setYawDelta(int delta);
 
+    void setYawCurrentDelta(int delta);
+
     void setYawAbsolute(int newTargetYaw);
 };
 

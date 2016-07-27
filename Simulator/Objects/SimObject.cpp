@@ -25,7 +25,7 @@ void SimObject::update(float dt){
         if (curY < 0)       curY += 360;
 
         float deltaRot = fmod(targetY - curY, 360);
-        printf("target: %f, cur: %f, delta: %f\n", targetY, curY, deltaRot);
+        //printf("target: %f, cur: %f, delta: %f\n", targetY, curY, deltaRot);
         if (abs(deltaRot) < maxRotSpeed*dt){
             node->setRotation(targetRot);
         }else{
@@ -48,7 +48,7 @@ void SimObject::update(float dt){
 
     //if the velocity vector is > 0, then subject it to friction
     if (vel.getLengthSQ() > 0){
-
+        /*
         //if the velocity + current acceleration is less than friction
         if (fabs(vel.X+acc.X*dt) < friction*dt){
             //stop it from moving (due to friction)
@@ -79,6 +79,8 @@ void SimObject::update(float dt){
             float frictionDir = friction*dt * (fabs(vel.Z)/vel.Z);
             vel.Z -= frictionDir;
         }
+        */
+        vel = vel * (1-(friction*dt));
     }
 
     //if the velocity is greater than terminal velocity(hard coded to 5 atm)

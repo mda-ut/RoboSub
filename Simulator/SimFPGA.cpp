@@ -25,7 +25,7 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
         forward.Z = dZ;
     }
     forward.normalize();
-    SimLogger::Log("Forward ", forward);
+    //SimLogger::Log("Forward ", forward);
 
     if (useKey && keyDown){
         //input processing

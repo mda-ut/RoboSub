@@ -21,8 +21,8 @@ FPGAData* SimFPGAInterface::poll() {
     mutex.lock();
     //TODO Add error checking on values from FPGA
     int power = 5;
-    int depth = 5;
-    int yaw = 4;
+    int depth = ih->getDepth();
+    int yaw = ih->getRot().Y;
     mutex.unlock();
 
     return new FPGAData("raw", power, yaw, depth);
