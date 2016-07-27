@@ -13,6 +13,9 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <stdlib.h>
+#include <iostream>
+#include <stdio.h>
+#include <cmath>
 
 
 /**
@@ -49,6 +52,9 @@ public:
 
 private:
     cv::VideoCapture cap;
+    std::vector<cv::Mat> video;
+    int screenX = 1920;
+    int screenY = 1080;
 };
 
 #endif // VIDEOTESTING_H

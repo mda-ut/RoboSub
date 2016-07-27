@@ -58,6 +58,7 @@ std::vector<cv::Point2f> ShapeFilter::getCenter(){
 }
 
 bool ShapeFilter::findCirc(cv::Mat img){
+    if (shape == 3) return findCircleExperimental(img);
     //getting the contours
     cv::Mat canny;
     std::vector<std::vector<cv::Point> > contours;
@@ -334,4 +335,71 @@ std::vector<cv::Point2f> ShapeFilter::findMassCenter(cv::Mat img){
     if (max > 0)
         result.push_back(mc[index]);
     return result;
+}
+
+bool ShapeFilter::findCircleExperimental(cv::Mat img){
+    cv::Mat canny_output;
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+
+    // Detect edges and contours
+    int thresh = 10;
+    cv::Canny( img, canny_output, thresh, thresh*2, 3 );
+    cv::findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+    std::vector<cv::Moments> mu(contours.size() );
+    for( int i = 0; i < contours.size(); i++ )
+    {
+        mu[i] = cv::moments( contours[i], false );
+    }
+
+    // Get the mass centers:
+    std::vector<cv::Point2f> mc( contours.size() );
+    for( int i = 0; i < mu.size(); i++ )
+    {
+        mc[i] = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );
+    }
+
+    // Draw contours
+    cv::Mat drawing = cv::Mat::zeros( canny_output.size(), CV_8UC3 );
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        cv::Scalar color = cv::Scalar(0,0,255);
+        cv::drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0 );
+        cv::circle( drawing, mc[i], 4, color, -1, 8, 0 );
+    }
+
+    // Calculate the area with the moments 00 and compare with the result of the OpenCV function
+
+    // printf("\t Info: Area and Contour Length \n");
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        cv::Scalar color = cv::Scalar( cv::Scalar(255,0,255));
+        cv::drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0);
+        cv::circle( drawing, mc[i], 4, color, -1, 8, 0 );
+    }
+
+    // Find largest mass
+    float maxmass = 0;
+    float rad = 0;
+    cv::Point2f masscenter(0, 0);
+    for ( int i = 0; i < contours.size(); i++)
+    {
+        float cur = cv::contourArea(contours[i]);
+            if ((maxmass < cur))
+            {
+                masscenter = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );;
+                maxmass = cur;
+                rad = pow(contourArea(contours[i])/M_PI,0);
+            }
+    }
+//    cout<<(std::to_string(maxmass) + " radius\n");
+//    cout<<("mass center: " + to_string(masscenter.x) + " " + to_string(masscenter.y)+"\n");
+    cv::circle( drawing, masscenter, 100, cv::Scalar(0,255,255), 5);
+
+    imshow("circles", drawing);
+    radius.clear();
+    radius.push_back(rad);
+    center.clear();
+    center.push_back(masscenter);
+    return rad > 0;
 }

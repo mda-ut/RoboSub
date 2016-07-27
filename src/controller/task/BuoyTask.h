@@ -31,6 +31,7 @@ private:
     float deltaAngle = -1;
     bool moveWithSpeed = true;
     int moveSpeed;
+    int closeRad;
 
     void move(float d);
     void changeDepth(float h);
@@ -41,7 +42,7 @@ private:
 
     HSVFilter green;
     HSVFilter red;
-    void doRed(cv::Mat frame);
+    cv::Mat filterRed(cv::Mat frame);
     void doGreen(cv::Mat frame);
 };
 #endif // BUOYTASK_H

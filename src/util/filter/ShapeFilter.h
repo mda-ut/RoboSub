@@ -108,6 +108,8 @@ private:
     void print(int i);
     void println(std::string s);
 
+    bool findCircleExperimental(cv::Mat);
+
 };
 
 #endif // SHAPEFILTER_H

@@ -15,6 +15,7 @@ BuoyTask::BuoyTask(Model* camModel, TurnTask* tk, SpeedTask* st, DepthTask* dt)
     travelDist = std::stoi(settings->getProperty("travelDist"));
     moveSpeed = std::stoi(settings->getProperty("moveSpeed"));
     deltaAngle = 0;
+    closeRad = std::stoi(settings->getProperty("closeRad"));
 
 }
 BuoyTask::~BuoyTask(){
@@ -120,7 +121,7 @@ void BuoyTask::execute() {
 
     red = HSVFilter(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
     //only look for 1 circle
-    ShapeFilter sf = ShapeFilter(2, 1);
+    ShapeFilter sf = ShapeFilter(3, 1);
 
     //assuming the sub is in the correct position
     //first look for red, and then hit it
@@ -141,6 +142,8 @@ void BuoyTask::execute() {
     cv::moveWindow("HSV", 1500, 400);
     cv::namedWindow("Center", CV_WINDOW_AUTOSIZE);
     cv::moveWindow("Center", 1500, 100);
+    cv::namedWindow("circles", CV_WINDOW_AUTOSIZE);
+    cv::moveWindow("circles", 1100, 400);
 
     cvCreateTrackbar("LH", "HSV", &redHSV[0], 179);
     cvCreateTrackbar("HH", "HSV", &redHSV[1], 179);
@@ -163,7 +166,7 @@ void BuoyTask::execute() {
         //filter for a color depending if the other color is hit or not
         if (!hitRed){
             println("Doing red");
-//            doRed(frame);
+//            hsvFiltered = filterRed(frame);
             red.setValues(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
             hsvFiltered = red.filter(frame);
             cv::imshow("HSV", hsvFiltered);
@@ -181,7 +184,7 @@ void BuoyTask::execute() {
         //after hitting a color, move the sub back to look for the other one
         //TODO: CALIBRATE THIS STEP
 
-        if (sf.findCirc(hsvFiltered)){
+        if (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad){
             retreat = false;
             cv::Point2f cent = sf.getCenter()[0];
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));
@@ -249,9 +252,9 @@ void BuoyTask::execute() {
                 //println("Rotating " + std::to_string(ang) + " degrees");
                 //rotate(ang);
                 float dir = cent.x-imgWidth/2;
-                println("Rotating 10 degrees " + std::to_string(dir));
+                println("Rotating 2 degrees " + std::to_string(dir));
                 dir /= std::abs(dir);
-                rotate (5*dir);
+                rotate (2);
                 /*
                 float scale = 23/sf.getRad()[0];
                 float dist = sf.getCenter()[0].x - imgWidth/2;
@@ -265,7 +268,8 @@ void BuoyTask::execute() {
             ///CIRCLES NOT FOUND
             ///ROTATE/MOVE SUB
             //rotate(rotateAng);
-            println("Circle not found, moving forward");
+            if (sf.getRad().size() > 0) printf("Size [%f]\n", sf.getRad()[0]);
+            println("Circle not found or too small, moving forward");
             //move(moveDist);
             if (retreat) {
                 if (moveWithSpeed){
@@ -296,15 +300,19 @@ void BuoyTask::execute() {
                 ///tries to look for any colors and move towards it
                 logger->info("Looking for coloured masses to turn towards");
                 std::vector<cv::Point2f> mc = sf.findMassCenter(data);
-                if (mc.size() > 0) {
+                if (mc.size() > 0 && false) {
                     logger->info("Found coloured mass");
                     float dir = mc[0].x - imgWidth/2;
                     dir /= std::abs(dir);
                     rotate(5 * dir);
                 } else {
                     ///if it dosnt see any colors, move forwards
-                    logger->debug("No coloured masses found.  Moving forward");
+                    logger->debug("No coloured masses found.  Moving forward for 1s");
                     move(moveSpeed);
+                    sleep(1);
+                    move(-1);
+                    sleep(1);
+                    move(0);
                 }
             }
         }
@@ -314,7 +322,7 @@ void BuoyTask::execute() {
     }
 }
 
-void BuoyTask::doRed(cv::Mat frame){
+cv::Mat BuoyTask::filterRed(cv::Mat frame){
     cv::Mat hsvFiltered = red.filter(frame);
     cv::imshow("HSV", hsvFiltered);
 }
