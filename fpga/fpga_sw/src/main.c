@@ -22,6 +22,15 @@
 #include "settings.h"
 #include "utils.h"
 
+/* Aside: I've changed the way motor to terminal mapping works, since set_motor_dir(i) means 'turn on motor situated at terminal i'
+ * and we're not sure which motor maps to which terminal yet. Before you'd have to hard-code each motor to a number and the HW and SW
+ * would have to agree on that number. One new way is to do something like 'set_motor_dir(FRONT_LEFT_MOTOR.terminal)',
+ * that's what I've done for the controller. Beware, there's still some hard-coded functions inside here which uses set_motor_dir(i),
+ * however since the commands which call it from software only uses this method in a for-loop through all motors, I didn't bother 
+ * changing the implementation. But the right way is set_motor_dir(hooks.terminal[M_FRONT_LEFT])
+ * if you want to say 'set the direction of the front left motor'. - Michael
+ */
+
 // This is the list of all the commands
 // Note: end the first string with a \n to ensure an exact match if no arguments are used
 struct command_struct my_cmds[] = {
@@ -34,22 +43,26 @@ struct command_struct my_cmds[] = {
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"imu\n", COMMAND_IMU_SHELL, "imu - enter IMU shell\n  Usage: imu\n\n  Enters a shell where stdin goes to the IMU\n  Type quit to exit the IMU shell\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n  Turn off/on power to all the voltage rails\n"},
-  {"sc", COMMAND_CONTROLLER, "sc - set controller off/on\n  Usage: sc (0|1)\n\n  Turn off/on controller\n"},
-  {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"},
-  {"sh", COMMAND_HEADING, "sh - set heading of motor positive or negative\n"},
+  {"sc", COMMAND_CONTROLLER, "sc - set controller off/on\n  Usage: sc (0|1)\n\n  Turn off/on controller\n"}, //Used (by SW)
+  {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"}, //Used
+  {"sh", COMMAND_HEADING, "sh - set heading of motor positive or negative\n"}, //Used
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
-  {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
+  {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"}, //Used
   {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
-  {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
+  {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"}, //Used
   {"spcd", COMMAND_PID_DEPTH, "spcd - set PID constants for depth\n  Usage: spcd P I D Alpha (all in double)\n\n"},
   {"spcp", COMMAND_PID_PITCH, "spcp - set PID constants for pitch\n  Usage: spcd P I D Alpha (all in double)\n\n"},
   {"spcr", COMMAND_PID_ROLL, "spcr - set PID constants for roll\n  Usage: spcd P I D Alpha (all in double)\n\n"},
   {"spcy", COMMAND_PID_YAW, "spcy - set PID constants for yaw\n  Usage: spcd P I D Alpha (all in double)\n\n"},
-  {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
-  {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor positive or negative\n"},
+  {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"}, //Used
+  {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor positive or negative\n"}, //Used
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
-  {"tm", COMMAND_TEST_MOTOR, "tm\n Usage: tmf <n>\n\n Test motor n by making it go forward\n"}
+  {"tmf", COMMAND_TEST_MOTOR_FORWARD, "tm\n Usage: tmf <n>\n\n Test motor n by making it go forward\n"},
+  {"tmr", COMMAND_TEST_MOTOR_REVERSE, "tm\n Usage: tmr <n>\n\n Test motor n by making it go reverse\n"},
+  {"tms", COMMAND_TEST_MOTOR_STOP, "tm\n Usage: tms <n>\n\n Test motor n by making it stop\n"},
+  {"tmp", COMMAND_TEST_MOTOR_POWER, "tm\n Usage: tmp <i>\n\n Change the speed factor for the next command (0 for default, max is 3 is max)\n"},
+
 };
 
 // the size of the above array
@@ -75,7 +88,7 @@ void print_help(char *st)
 }
 
 // process a command
-void process_command(char *st)
+void process_command(char *st, int *speed_factor)
 {
   // linearly search for the command from the table of commands
   enum COMMAND_ID cid = COMMAND_INVALID;
@@ -96,7 +109,7 @@ void process_command(char *st)
   double P, I, D, Alpha;
 
   switch (cid) {
-	case COMMAND_TEST_MOTOR:
+	case COMMAND_TEST_MOTOR_FORWARD:
       i = read_hex(st);
 	  if (i < 0 || i >= NUM_MOTORS) {
 		  printf("Motor # Enterred is Invalid\n");
@@ -106,10 +119,46 @@ void process_command(char *st)
     	for (j = 0; j < NUM_MOTORS; j++) {
         	set_motor_duty_cycle(j, get_motor_duty_cycle(j));
       	}
-		set_motor_duty_cycle(i,(int)(0.6 * 1024));
+		set_motor_duty_cycle(i,(int)((0.6 + 0.1 * (double) (*speed_factor)) * 1024));
 		set_motor_dir(i, MOTOR_DIR_FORWARD);
 	  } 
       break; 
+	case COMMAND_TEST_MOTOR_REVERSE:
+      i = read_hex(st);
+	  if (i < 0 || i >= NUM_MOTORS) {
+		  printf("Motor # Enterred is Invalid\n");
+	  } else {
+		set_pwm_freq(20);
+    	printf("PWM frequency set to: 20kHz\n");
+    	for (j = 0; j < NUM_MOTORS; j++) {
+        	set_motor_duty_cycle(j, get_motor_duty_cycle(j));
+      	}
+		set_motor_duty_cycle(i,(int)((0.4 - 0.1 * (double) (*speed_factor)) * 1024));
+		set_motor_dir(i, MOTOR_DIR_FORWARD);
+	  } 
+      break; 
+	case COMMAND_TEST_MOTOR_STOP:
+      i = read_hex(st);
+	  if (i < 0 || i >= NUM_MOTORS) {
+		  printf("Motor # Enterred is Invalid\n");
+	  } else {
+		set_pwm_freq(20);
+    	printf("PWM frequency set to: 20kHz\n");
+    	for (j = 0; j < NUM_MOTORS; j++) {
+        	set_motor_duty_cycle(j, get_motor_duty_cycle(j));
+      	}
+		set_motor_duty_cycle(i,(int)(0.5 * 1024));
+		set_motor_dir(i, MOTOR_DIR_STOPPED);
+	  } 
+      break; 
+    case COMMAND_TEST_MOTOR_POWER:
+	  i = read_hex(st);
+      if (i < 0 || i > 3) {
+            printf("Enterred speed factor out of range [0,3]");
+      } else {
+		  *speed_factor = (int) (i);
+	  }
+	  break;
     case COMMAND_INVALID:
       printf("Sorry, command %s is not recognized. For a list of valid commands, type 'h' for help\n", st);
       break;
@@ -312,13 +361,14 @@ void process_command(char *st)
 int main()
 {
   char buffer_str[STR_LEN+1];
+  int speed_factor = 0;
 
   init();
 
   // read and process commands continuously
   while(1) {
     alt_getline(buffer_str, STR_LEN);
-    process_command(buffer_str);
+    process_command(buffer_str, &speed_factor);
   }
 
   return 0;

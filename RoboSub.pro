@@ -41,7 +41,9 @@ unix:!macx: PRE_TARGETDEPS += $$PWD/Simulator/irrlicht-1.8.3/lib/Linux/libIrrlic
 OTHER_FILES += src/settings/*
 config.path =$${OUT_PWD}/settings
 config.files = src/settings/*
-INSTALLS += config
+assets.path =$${OUT_PWD}/assets
+assets.files = Simulator/assets/*
+INSTALLS += config assets
 
 # Input
 HEADERS += \

@@ -74,6 +74,9 @@ class Controller : public QObject {
 
         void setView(View* view);
 
+        int getTargetYaw();
+        int getTargetDepth();
+
 	public slots:
 		/**
 		 * Handles the results from the ControllerThread
@@ -134,6 +137,11 @@ class Controller : public QObject {
          * @brief Handles the button click for the PathTask
          */
         void handlePathTaskClick();
+
+        /**
+         * @brief Handles the button click for the BuoyTask
+         */
+        void handleBuoyTaskClick();
 
         void runCompetition();
 

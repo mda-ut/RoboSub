@@ -12,7 +12,6 @@
 
 class PathTask : public Task {
 public:
-    PathTask();
     virtual ~PathTask();
     PathTask(Model* cameraModel, TurnTask* turnTask, SpeedTask* speedTask);
 

@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "alt_types.h"
+#include "settings.h"
 
 #define ABS(x) (((x) > 0) ? (x) : (-(x)))
 
@@ -24,28 +25,19 @@ struct orientation {
   int depth;
 };
 
-// Motor 0 = front left horizontal
-// Motor 1 = front right horizontal
-// Motor 2 = back left horizontal
-// Motor 3 = back right horizontal
-// Motor 4 = front left vertical
-// Motor 5 = front right vertical
-// Motor 6 = back left vertical
-// Motor 7 = back right vertical
-/*#define M_FRONT_LEFT motor_duty_cycle[0]
-#define M_FRONT_RIGHT motor_duty_cycle[1]
-#define M_LEFT motor_duty_cycle[2]
-#define M_RIGHT motor_duty_cycle[3]
-#define M_REAR motor_duty_cycle[4]*/
-
-#define M_FRONT_LEFT motor_duty_cycle[0]
-#define M_FRONT_RIGHT motor_duty_cycle[1]
-//#define M_BACK_LEFT motor_duty_cycle[2] // back left not used on Tempest
-//#define M_BACK_RIGHT motor_duty_cycle[3] // back right not used on Tempest
-#define MP_FRONT_LEFT motor_duty_cycle[2]
-#define MP_FRONT_RIGHT motor_duty_cycle[3]
-#define MP_BACK_LEFT motor_duty_cycle[4]
-#define MP_BACK_RIGHT motor_duty_cycle[5]
+/* struct which keeps data about which motor maps to which terminal on the motor board
+ * works together with motor_duty_cycle array to deliver pwms to motor board
+ */
+struct motor_terminal_connections {
+  // terminal on the motor board, possible value from 1 to 8
+  // Indexing for this array corresponds to terminalEnum in settings.h
+  // Value @ Index corresponds to which H-Bridge on the motor boards (terminal) that motor enumeration corresponds to
+  int terminals[NUM_MOTORS];
+  // whether the motor is enabled, 0 false 1 true
+  // Indexing for this array corresponds to terminalEnum in settings.h
+  // Value @ Index corresponds to whether that motor has been enabled in settings.h
+  bool isEnabled[NUM_MOTORS];
+};
 
 void set_target_speed(int speed);
 void set_target_heading(int heading);

@@ -1,3 +1,22 @@
+/////////////////////////////////////////////////////////////////////////
+// Module: mda_motor_control_internal.v
+// i---------------------------------------------------------------------
+// Purpose: Module defines the motor controller logics.
+// ---------------------------------------------------------------------
+// Version History:
+// 
+// 2016/6/19 - 2.0: Revised for usage with L298 dual motor board.
+// 					GPIO assignment changed to use only dh1
+// 					and some of dh2 pins... 
+// Albert Hsueh
+//
+// 2016/6/21 - 2.1: Revised for usage with bts7960 driver.
+// 					GPIO assignment changed to use only dh1.
+//					this driver only cares for the foward(a pwm)
+//					and the reverse (also pwm) signals. 2 bits
+//					to control 1 motor.
+// Albert Hsueh
+//////////////////////////////////////////////////////////////////////////
 
 module MDA_DE0_Nano_SOC (
 	//////////// CLOCK //////////
@@ -112,16 +131,37 @@ module MDA_DE0_Nano_SOC (
 	  .gpio_out({HB1, HB2, HB3, HB4, HB5, HB6, HB7, HB8, IMU_IN, PN1, PN2, PN3, PN4, PN5, PN6, PN7, PN8})
 	);
 	
-	//motor wires ordered {forward hhb top, forward hhb bot, reverse hhb top, reverse hhb bot}
+	//motor wires ordered {pwm, forward, reverse, enable}
 	//hhb = half h-bridge
-	assign {GPIO_0[11], GPIO_0[13], GPIO_0[15], GPIO_0[17]} = HB1;
-	assign {GPIO_0[5], GPIO_0[3], GPIO_0[9], GPIO_0[7]} = HB2;
-	assign {GPIO_0[29], GPIO_0[27], GPIO_0[33], GPIO_0[31]} = HB3;
-	assign {GPIO_0[19], GPIO_0[21], GPIO_0[23], GPIO_0[25]} = HB4;
-	assign {GPIO_1[11], GPIO_1[13], GPIO_1[15], GPIO_1[17]} = HB5;
-	assign {GPIO_1[5], GPIO_1[3], GPIO_1[9], GPIO_1[7]} = HB6;
-	assign {GPIO_1[29], GPIO_1[27], GPIO_1[33], GPIO_1[31]} = HB7;
-	assign {GPIO_1[19], GPIO_1[21], GPIO_1[23], GPIO_1[25]} = HB8;
+	//however, enable and pwm is not necessary so use them to make eight useable motors
+	//that will use gpio_0(dh1).
+	//dh1 corresponds to gpio_0 so I know hb1-hb4 works. By this logic hb5 is
+	//the half working one. Now we just need to patch up hb5,6,7,and 8 with the ena and pwm of
+	//hb1-4. We do a swap, f with p and r with e
+	
+	//assign {GPIO_0[11], GPIO_0[13], GPIO_0[15], GPIO_0[17]} = HB1;
+	assign {GPIO_1[13], GPIO_0[13], GPIO_0[15], GPIO_1[15]} = HB1;
+
+	//assign {GPIO_0[5], GPIO_0[3], GPIO_0[9], GPIO_0[7]} = HB2;		
+	assign {GPIO_1[3], GPIO_0[3], GPIO_0[9], GPIO_1[9]} = HB2;
+
+	//assign {GPIO_0[29], GPIO_0[27], GPIO_0[33], GPIO_0[31]} = HB3;	
+	assign {GPIO_1[27], GPIO_0[27], GPIO_0[33], GPIO_1[33]} = HB3;
+
+	//assign {GPIO_0[19], GPIO_0[21], GPIO_0[23], GPIO_0[25]} = HB4;	
+	assign {GPIO_1[21], GPIO_0[21], GPIO_0[23], GPIO_1[23]} = HB4;
+
+	//assign {GPIO_1[11], GPIO_1[13], GPIO_1[15], GPIO_1[17]} = HB5;	
+	assign {GPIO_1[11], GPIO_0[11], GPIO_0[17], GPIO_1[17]} = HB5;		// new gets f = m0p r = m0e
+
+	//assign {GPIO_1[5], GPIO_1[3], GPIO_1[9], GPIO_1[7]} = HB6;	
+	assign {GPIO_1[5], GPIO_0[5], GPIO_0[7], GPIO_1[7]} = HB6;		// new gets f = m1p r = m1e	
+
+	//assign {GPIO_1[29], GPIO_1[27], GPIO_1[33], GPIO_1[31]} = HB7;	
+	assign {GPIO_1[29], GPIO_0[29], GPIO_0[31], GPIO_1[31]} = HB7;		// new gets f = m2p r = m2e
+
+	//assign {GPIO_1[19], GPIO_1[21], GPIO_1[23], GPIO_1[25]} = HB8;	
+	assign {GPIO_1[19], GPIO_0[19], GPIO_0[25], GPIO_1[25]} = HB8;		// new gets f = m3p r = m3e
 	
 	
 	assign {GPIO_0[12], GPIO_0[10]} = PN1;

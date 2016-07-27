@@ -30,6 +30,8 @@ public:
     void setRot(irr::core::vector3df);
     irr::core::vector3df getRot();
 
+    void setDepth(float d)  {targetDepth = d;}
+
     std::string getName();
     irr::scene::ISceneNode *node = 0;
 
@@ -40,7 +42,12 @@ protected:
     irr::core::vector3df vel;
     irr::core::vector3df acc;
     irr::core::vector3df fri;
+    irr::core::vector3df targetRot;
+    float targetDepth = 0;
+
+    const float maxRotSpeed = 20;
     const float friction = 2.5f;
+    const float maxSpeed = 3;
 
 };
 

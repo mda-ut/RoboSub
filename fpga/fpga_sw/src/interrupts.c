@@ -57,8 +57,10 @@ void set_controller(int status)
      set_target_speed(0);
      set_target_heading(o.yaw);
      set_target_depth(get_depth());
+     printf("Interval\n");
 
      IOWR_ALTERA_AVALON_TIMER_CONTROL(NIOS_TIMER_BASE, 7); // Start timer interrupt
+     printf("Timer interrupt set\n");
    } else {
       // Turn off all motors
       int i;

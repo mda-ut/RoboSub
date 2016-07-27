@@ -1,0 +1,34 @@
+README
+
+1. 
+To run the simulator, you have to first build Irrlicht
+	-cd into RoboSub/Simulator/irrlicht-1.8.3/source/Irrlicht
+	-make
+	-check below for fixes for some common errors
+
+2.
+Make RoboSub (in Qt Creater)
+
+3.
+Move the assets folder into your build directory 
+	-build directory is in Qt Creater under Projects (on the left side), build directory
+	-assets folder is in the Simulator/ folder
+
+4.
+Move the settings folder in src/ to your build directory
+
+5.
+You should be able to run simulator now
+
+
+Common Errors
+
+	-Missing openGl
+		-sudo apt-get install mesa-utils
+	-Missing GL/gl.h
+		-sudo apt-get install mesa-common-dev
+	-Cannot find -lGL or -lGLU
+		-read http://stackoverflow.com/questions/18406369/qt-cant-find-lgl-error
+		TLDR (might not always work)
+		-sudo ln -s /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so
+		-sudo ln -s /usr/lib/x86_64-linux-gnu/mesa/libGLU.so.1 /usr/lib/libGLU.so

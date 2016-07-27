@@ -13,7 +13,7 @@
 #include "Util.h"
 
 bool Logger::writeToConsole = true;
-bool Logger::writeToFile = false;
+bool Logger::writeToFile = true;
 std::ofstream Logger::logFile;
 Timer* Logger::timer = NULL;
 Logger::Level Logger::level = Logger::Level::DEBUG;

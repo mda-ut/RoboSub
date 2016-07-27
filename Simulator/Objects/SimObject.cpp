@@ -17,6 +17,31 @@ void SimObject::update(float dt){
 
     //rotation----------------------------------------------------
     irr::core::vector3df rot = node->getRotation();
+    if (!targetRot.equals(rot)){
+        float targetY = fmod(targetRot.Y, 360);
+        if (targetY < 0)    targetY += 360;
+
+        float curY = fmod(rot.Y, 360);
+        if (curY < 0)       curY += 360;
+
+        float deltaRot = fmod(targetY - curY, 360);
+        printf("target: %f, cur: %f, delta: %f\n", targetY, curY, deltaRot);
+        if (abs(deltaRot) < maxRotSpeed*dt){
+            node->setRotation(targetRot);
+        }else{
+            if(abs(deltaRot) > 180){
+                if (deltaRot > 0){
+                    deltaRot = deltaRot - 360;
+                }else{
+                    deltaRot = 360 + deltaRot;
+                }
+            }
+            rot.Y += std::copysign(maxRotSpeed*dt, deltaRot);
+            node->setRotation(rot);
+            SimLogger::Log("Sim rot: ", rot);
+        }
+    }
+
 
     //position----------------------------------------------------
     irr::core::vector3df pos = node->getPosition();
@@ -57,12 +82,15 @@ void SimObject::update(float dt){
     }
 
     //if the velocity is greater than terminal velocity(hard coded to 5 atm)
-    if (vel.getLength() > 5){
+    if (vel.getLength() > maxSpeed){
         //stop it from going any faster
-        vel = vel.normalize()*5;
+        vel = vel.normalize()*maxSpeed;
     }
     vel += acc*dt;
     pos += vel;
+
+    if (targetDepth != 0)
+        pos.Y = targetDepth;
 
     //Logger::Log("Acc " + std::to_string(acc.Z*dt));
     //Logger::Log("Vel " + std::to_string(vel.Z));
@@ -88,7 +116,8 @@ void SimObject::setAcc(irr::core::vector3df a){
     //SimLogger::Log(msg);
 }
 void SimObject::setRot(irr::core::vector3df r){
-    node->setRotation(r);
+//    node->setRotation(r);
+    targetRot = r;
 }
 
 irr::core::vector3df SimObject::getAcc(){
