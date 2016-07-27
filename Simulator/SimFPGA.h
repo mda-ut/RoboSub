@@ -42,7 +42,7 @@ private:
     irr::core::vector3df acc;
     irr::core::vector3df vel;
     irr::core::vector3df rot;
-    float targetDepth;
+    float targetDepth = 200;
     irr::core::vector3df targetVel;
 };
 

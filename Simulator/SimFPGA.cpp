@@ -78,7 +78,7 @@ void InputHandler::update(irr::f32 dt, irr::core::vector3df dir){
 }
 
 void InputHandler::setDepth(float targetDepth){
-    this->targetDepth = 500 - targetDepth;
+    this->targetDepth = targetDepth;
     if (this->targetDepth < 150){
         this->targetDepth = 150;
     }

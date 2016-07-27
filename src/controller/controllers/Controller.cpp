@@ -19,7 +19,7 @@ Controller::Controller() {
 
 Controller::Controller(std::vector<Model*> models){
     this->models = models;
-    targetDepth = 300;
+    targetDepth = 200;
     targetYaw = 0;
     taskList = new QQueue <class Task* >;
 }

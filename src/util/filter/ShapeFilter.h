@@ -104,7 +104,7 @@ private:
     std::vector<cv::Point2f> center;
 
     Logger* logger = new Logger("ShapeFilter");
-    bool debug = true;
+    bool debug = false;
     void print(int i);
     void println(std::string s);
 
