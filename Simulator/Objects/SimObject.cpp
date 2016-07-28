@@ -26,7 +26,7 @@ void SimObject::update(float dt){
 
         float deltaRot = fmod(targetY - curY, 360);
         //printf("target: %f, cur: %f, delta: %f\n", targetY, curY, deltaRot);
-        if (abs(deltaRot * dt) < maxRotSpeed*dt){
+        if (abs(deltaRot) < maxRotSpeed*dt){
             node->setRotation(targetRot);
         }else{
             if(abs(deltaRot) > 180){

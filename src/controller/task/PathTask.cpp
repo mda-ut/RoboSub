@@ -166,13 +166,22 @@ void PathTask::moveTo(cv::Point2f pos) {
   }
 }
 
+// comparison function object
+bool compareContourAreas ( std::vector<cv::Point> contour1, std::vector<cv::Point> contour2 ) {
+    double i = fabs( contourArea(cv::Mat(contour1)) );
+    double j = fabs( contourArea(cv::Mat(contour2)) );
+    return ( i > j );
+}
+
 /**
  *The actual pathtask
  *
  */
 void PathTask::execute() {
+  Timer timer;
   float ajusterAngle=0;
   int accumulator = 0;
+  int centeredAccumulator = 0;
   float accMassX = 0;
   float accMassY = 0;
   float accAngle = 0;
@@ -194,9 +203,11 @@ void PathTask::execute() {
   int iLowV = std::stoi(settings->getProperty("LOWV"));
   int iHighV = std::stoi(settings->getProperty("HIGHV"));
 
+  int timeout = std::stoi(settings->getProperty("TIMEOUT"));
   alignThreshold = std::stoi(settings->getProperty("ALIGN_THRESHOLD"));
   forwardSpeed = std::stoi(settings->getProperty("FORWARD_SPEED"));
   rect_angle_threshold = std::stoi(settings->getProperty("RECTANGLE_ANGLE_THRESHOLD"));
+  int MIN_RECT_AREA = std::stoi(settings->getProperty("MIN_RECT_AREA"));
 
 
   //Create trackbars in "Control" window
@@ -216,10 +227,13 @@ void PathTask::execute() {
   cv::namedWindow("HSV",CV_WINDOW_AUTOSIZE);
   cv::moveWindow("HSV", 100, 200);
 
+  rotate(0);
+
   bool angleThresholdMet = false;
   cout << "entering the while loop\n";
   bool centeredOnce = false;
-  while (!angleThresholdMet){
+  timer.start();
+  while (!angleThresholdMet && timer.getTimeElapsed() < timeout){
 
     delete data;
     data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
@@ -264,9 +278,11 @@ void PathTask::execute() {
       setSpeed(forwardSpeed);
       continue;
     }
-    accumulator++;
-    std::vector<cv::Point> approx;
 
+    // sort contours
+    std::sort(contours.begin(), contours.end(), compareContourAreas);
+
+    std::vector<cv::Point> approx;
 
     // Get the moments
     vector<Moments> mu(contours.size() );
@@ -275,8 +291,9 @@ void PathTask::execute() {
 
     //  Get the mass centers:
     vector<Point2f> mc( contours.size() );
-    for( size_t i = 0; i < contours.size(); i++ )
-      { mc[i] = Point2f( static_cast<float>(mu[i].m10/mu[i].m00) , static_cast<float>(mu[i].m01/mu[i].m00) ); }
+    for( size_t i = 0; i < contours.size(); i++ ) {
+        mc[i] = Point2f( static_cast<float>(mu[i].m10/mu[i].m00) , static_cast<float>(mu[i].m01/mu[i].m00) );
+    }
 
 
     cv::circle(imgHSV, mc[0], 5, Scalar(180,105,255));
@@ -291,6 +308,7 @@ void PathTask::execute() {
 
     printf("contours.size %d\n", contours.size());
     // printf("contours at 0, %d\n",contours[0]);
+    int largestRectIndex = 0;
     for (int i = 0; i < contours.size(); i++){
 
       //printf("Contours size: %d\n", contours.size());
@@ -322,6 +340,7 @@ void PathTask::execute() {
          *Find the angle relative to vertical of the max side
          *
          */
+        largestRectIndex = i;
         int maxS = maxSide(approx);
         int numVertices=approx.size();
         logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%numVertices));
@@ -346,6 +365,7 @@ void PathTask::execute() {
         line(imgLines, approx[2], approx[3], Scalar(0,0,255), 2);
         line(imgLines, approx[3], approx[0], Scalar(0,0,255), 2);
         imshow("contours", imgLines);
+        break;
 
       }//if loop end
 
@@ -358,7 +378,7 @@ void PathTask::execute() {
      */
     bool closeEnough=false;
     cv::Point origin( imgWidthF/2, imgHeightF/2);
-    if (lineLength(mc[0], origin)<30) {
+    if (lineLength(mc[largestRectIndex], origin)<30) {
       closeEnough=true;
       setSpeed(0);
     }
@@ -372,26 +392,31 @@ void PathTask::execute() {
     if (!closeEnough && !centeredOnce){
       //if we aren't close enough
       //go back to the beginning of loop to try again
-      //printf("contours.size %d\n", contours.size());
-      accMassX += mc[0].x;
-      accMassY += mc[0].y;
+      //printf("contours.size %d\n", contours.size());  
+      accumulator++;
+      accMassX += mc[largestRectIndex].x;
+      accMassY += mc[largestRectIndex].y;
       if (accumulator == 15){
         cv::Point avgMass( accMassX/15, accMassY/15);
-        moveTo(avgMass);
+        printf("contour size %f\n", fabs( contourArea(cv::Mat(contours[largestRectIndex])) ));
+        if (fabs( contourArea(cv::Mat(contours[largestRectIndex])) ) > MIN_RECT_AREA) {
+            moveTo(avgMass);
+        } else {
+            setSpeed(10);
+        }
         accMassX = 0;
         accMassY = 0;
         accumulator = 0;
         accAngle = 0;
-
       }
-
     }
     //rotating relative to the rectangle we have found.
     else {
       centeredOnce = true;
       accAngle += ajusterAngle;
-      if (accumulator == 15){
-        accumulator = 0;
+      centeredAccumulator++;
+      if (centeredAccumulator == 15){
+        centeredAccumulator = 0;
         if(abs(accAngle)/15 < rect_angle_threshold ){
           angleThresholdMet = true; // threshold to get out of loop
         }
@@ -405,9 +430,6 @@ void PathTask::execute() {
       }
     }
   }
-
-  //for competition, start moving along path
-  setSpeed(20);
   logger->info("EXITING");
   return;
 }
