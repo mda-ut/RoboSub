@@ -31,6 +31,7 @@ private:
     float deltaAngle = -1;
     bool moveWithSpeed = true;
     int moveSpeed;
+    int moveTime;
     int closeRad;
 
     void move(float d);
