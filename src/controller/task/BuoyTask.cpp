@@ -10,13 +10,20 @@ BuoyTask::BuoyTask(Model* camModel, TurnTask* tk, SpeedTask* st, DepthTask* dt)
 
     // Load properties file
     PropertyReader* propReader;
-    propReader = new PropertyReader("../src/settings/buoy_task_settings.txt");
+    propReader = new PropertyReader("settings/buoy_task_settings.txt");
     settings = propReader->load();
     travelDist = std::stoi(settings->getProperty("travelDist"));
     moveSpeed = std::stoi(settings->getProperty("moveSpeed"));
     deltaAngle = 0;
     closeRad = std::stoi(settings->getProperty("closeRad"));
-
+    moveTime = std::stoi(settings->getProperty("MOVE_TIME"));
+    sinkTime = std::stoi(settings->getProperty("sinkTime"));
+    rotateTime = std::stoi(settings->getProperty("rotateTime"));
+    retreatRotateTime = std::stoi(settings->getProperty("retreatRotateTime"));
+    forwardBurstTime = std::stoi(settings->getProperty("forwardBurstTime"));
+    stopBackSpeed= std::stoi(settings->getProperty("stopBackSpeed"));
+    rotateSpeed= std::stoi(settings->getProperty("rotateSpeed"));
+    sinkHeight= std::stoi(settings->getProperty("sinkHeight"));
 }
 BuoyTask::~BuoyTask(){
     delete logger;
@@ -53,7 +60,7 @@ void BuoyTask::changeDepth(float h){
     dt->setDepthDelta(h);
     dt->execute();
 //    usleep(5000000);
-    sleep(1);
+    sleep(sinkTime);
 }
 
 void BuoyTask::rotate(float angle){
@@ -62,7 +69,7 @@ void BuoyTask::rotate(float angle){
     tk->execute();
     deltaAngle += angle;
 //    usleep(1000000);
-    sleep(1);
+    sleep(rotateTime);
 }
 void BuoyTask::slide(float d){
     //distance is all in cm
@@ -108,12 +115,12 @@ float BuoyTask::calcDistance(float rad){
 
 void BuoyTask::execute() {
 
-    green = HSVFilter(std::stoi(settings->getProperty("g1")),
-                    std::stoi(settings->getProperty("g2")),
-                    std::stoi(settings->getProperty("g3")),
-                    std::stoi(settings->getProperty("g4")),
-                    std::stoi(settings->getProperty("g5")),
-                    std::stoi(settings->getProperty("g6")));
+    int greenHSV[6];
+    for (int i = 0; i < 6; i++){
+        greenHSV[i] = std::stoi(settings->getProperty("g"+std::to_string(i+1)));
+    }
+
+    green = HSVFilter(greenHSV[0], greenHSV[1], greenHSV[2], greenHSV[3], greenHSV[4], greenHSV[5]);
 
     int redHSV[6];
     for (int i = 0; i < 6; i++){
@@ -142,8 +149,10 @@ void BuoyTask::execute() {
     bool done = false;
     cv::namedWindow("HSV", CV_WINDOW_AUTOSIZE);
     cv::moveWindow("HSV", 1500, 400);
+    cv::namedWindow("HSV2", CV_WINDOW_AUTOSIZE);
+    cv::moveWindow("HSV2", 1500, 100);
     cv::namedWindow("Center", CV_WINDOW_AUTOSIZE);
-    cv::moveWindow("Center", 1500, 100);
+    cv::moveWindow("Center", 1100, 100);
     cv::namedWindow("circles", CV_WINDOW_AUTOSIZE);
     cv::moveWindow("circles", 1100, 400);
 
@@ -153,6 +162,13 @@ void BuoyTask::execute() {
     cvCreateTrackbar("HS", "HSV", &redHSV[3], 255);
     cvCreateTrackbar("LV", "HSV", &redHSV[4], 255);
     cvCreateTrackbar("HV", "HSV", &redHSV[5], 255);
+
+    cvCreateTrackbar("LH", "HSV2", &greenHSV[0], 179);
+    cvCreateTrackbar("HH", "HSV2", &greenHSV[1], 179);
+    cvCreateTrackbar("LS", "HSV2", &greenHSV[2], 255);
+    cvCreateTrackbar("HS", "HSV2", &greenHSV[3], 255);
+    cvCreateTrackbar("LV", "HSV2", &greenHSV[4], 255);
+    cvCreateTrackbar("HV", "HSV2", &greenHSV[5], 255);
 
     while (!done) {
         std::string s = "raw";
@@ -174,8 +190,9 @@ void BuoyTask::execute() {
             cv::imshow("HSV", hsvFiltered);
         } else if (!hitGreen){
 //            println("Filtering green");
+            green.setValues(greenHSV[0], greenHSV[1], greenHSV[2], greenHSV[3], greenHSV[4], greenHSV[5]);
             hsvFiltered = green.filter(frame);
-            cv::imshow("HSV", hsvFiltered);
+            cv::imshow("HSV2", hsvFiltered);
         } else if (hitGreen && hitRed) {
             done = true;
             println("Done task");
@@ -184,7 +201,7 @@ void BuoyTask::execute() {
 
         if (alligned){
             move(moveSpeed);
-            sleep(std::stoi(settings->getProperty("MOVE_TIME")));
+            sleep(moveTime);
             if (!hitRed){
                 hitRed = true;
                 println("Hit red");
@@ -195,15 +212,16 @@ void BuoyTask::execute() {
                 println("Hit green");
                 retreat = true;
             }
+            move(0);
         }else if (retreat){
             if (moveWithSpeed){
                 println("Retreating");
                 move(-moveSpeed);
-                sleep(8);
+                sleep(moveTime);
                 //usleep(deltaT * 500);
                 move(0);
                 rotate(-deltaAngle);
-                sleep(3);
+                sleep(retreatRotateTime);
             } else {
                 println("Retreating " + std::to_string(-deltaDist - 20) + "cm");
                 move(-deltaDist - 20);      //move 20cm more than i needed
@@ -264,9 +282,9 @@ void BuoyTask::execute() {
                 } else {
                     float deltaY;
                     if (cent.y > imgHeight/2) {
-                        deltaY = -1; //rise a bit
+                        deltaY = -sinkHeight; //rise a bit
                     } else {
-                        deltaY = 1; //sink a bit
+                        deltaY = sinkHeight; //sink a bit
                     }
                     //float deltaY = (cent.y - imgHeight/2)/sf.getRad()[0];
                     println("Rising " + std::to_string(deltaY*100)+"cm");
@@ -309,21 +327,21 @@ void BuoyTask::execute() {
                     printf("mass x[%f] y[%f]\n", mc[0].x, mc[0].y);
                     float dir = mc[0].x - imgWidth/2;
                     dir /= std::abs(dir);
-                    rotate(2 * dir);
+                    rotate(rotateSpeed * dir);
                 } else {
                     ///if it dosnt see any colors, move forwards
                     logger->debug("No coloured masses found.  Moving forward for 1s");
                     move(moveSpeed);
-                    sleep(1);
-                    move(-1);
-                    sleep(1);
+                    sleep(forwardBurstTime);
+                    move(stopBackSpeed);
+                    sleep(forwardBurstTime/2);
                     move(0);
                 }
 
         }
         delete data;
         data = 0;
-        usleep(33000);
+//        usleep(33000);
     }
 }
 

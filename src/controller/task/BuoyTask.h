@@ -31,7 +31,15 @@ private:
     float deltaAngle = -1;
     bool moveWithSpeed = true;
     int moveSpeed;
+    int moveTime;
     int closeRad;
+    int sinkTime;
+    int rotateTime;
+    int retreatRotateTime;
+    int forwardBurstTime;
+    int stopBackSpeed;
+    int rotateSpeed;
+    int sinkHeight;
 
     void move(float d);
     void changeDepth(float h);

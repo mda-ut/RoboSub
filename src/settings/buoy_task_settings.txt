@@ -1,5 +1,5 @@
-g1 = 47
-g2 = 115
+g1 = 10
+g2 = 60
 g3 = 50
 g4 = 255
 g5 = 165
@@ -14,7 +14,22 @@ moveDist = 40
 rotateAng = 45
 movementDelay = 50
 travelDist = 50
-moveSpeed = 6;
-closeRad = 1;
+moveSpeed = 8
+closeRad = 1
 # In seconds
 MOVE_TIME = 5
+
+#time it takes the sub to sink
+sinkTime = 1
+
+#time takes the sub to rotate
+rotateTime = 1
+#time for sub to turn delta degrees
+retreatRotateTime = 5
+#time for sub to move forward to look for buoys
+forwardBurstTime = 1
+#speed the sub stops at (stops forward momentum)
+stopBackSpeed = -1
+
+rotateSpeed = 1
+sinkHeight = 1
