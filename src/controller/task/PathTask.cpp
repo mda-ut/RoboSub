@@ -240,6 +240,8 @@ void PathTask::execute() {
     inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
 
 
+
+
     //morphological opening (removes small objects from the foreground)
     erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
     dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
@@ -251,11 +253,15 @@ void PathTask::execute() {
 
     logger->trace("Thresholded input");
 
+    //take inverted image of imgThresholded
+    threshold( imgThresholded, imgThresholdedInv, 70, 255,1);
+    imshow("imgThresholdedInv", imgThresholdedInv);
 
     // Use Canny instead of threshold to catch squares with gradient shading
     //canny algorithm is an ubedge detector
     cv::Mat bw;
-    cv::Canny(imgThresholded, bw, 10, 50, 5);
+   // cv::Canny(imgThresholded, bw, 10, 50, 5);
+    cv::Canny(imgThresholdedInv, bw, 10, 50, 5);
     std::vector<std::vector<cv::Point> > contours;
     cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     cout << " found contours\n";
