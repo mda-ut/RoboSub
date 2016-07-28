@@ -123,11 +123,14 @@ void BuoyTask::execute() {
     green = HSVFilter(greenHSV[0], greenHSV[1], greenHSV[2], greenHSV[3], greenHSV[4], greenHSV[5]);
 
     int redHSV[6];
+    int redHSV2[6];
     for (int i = 0; i < 6; i++){
         redHSV[i] = std::stoi(settings->getProperty("r"+std::to_string(i+1)));
+        redHSV2[i] = std::stoi(settings->getProperty("rr"+std::to_string(i+1)));
     }
 
     red = HSVFilter(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
+    red2 = HSVFilter(redHSV2[0], redHSV2[1], redHSV2[2], redHSV2[3], redHSV2[4], redHSV2[5]);
     //only look for 1 circle
     ShapeFilter sf = ShapeFilter(3, 1);
 
@@ -242,7 +245,7 @@ void BuoyTask::execute() {
         //after hitting a color, move the sub back to look for the other one
         //TODO: CALIBRATE THIS STEP
 
-        else if (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad){
+        else if ( (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad) || (sf.findCirc(red2.filter(frame)) && sf.getRad()[0] > closeRad) ){
             retreat = false;
             cv::Point2f cent = sf.getCenter()[0];
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));

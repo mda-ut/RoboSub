@@ -1,3 +1,4 @@
+#simulator values
 g1 = 10
 g2 = 60
 g3 = 50
@@ -10,6 +11,27 @@ r3 = 0
 r4 = 201
 r5 = 200
 r6 = 255
+rr1 = 105
+rr2 = 137
+rr3 = 0
+rr4 = 201
+rr5 = 200
+rr6 = 255
+
+#real video values
+#r1 = 0
+#r2 = 111
+#r3 = 0
+#r4 = 184
+#r5 = 82
+#r6 = 183
+#rr1 = 0
+#rr2 = 179
+#rr3 = 196
+#rr4 = 255
+#rr5 = 0
+#rr6 = 206
+
 moveDist = 40
 rotateAng = 45
 movementDelay = 50

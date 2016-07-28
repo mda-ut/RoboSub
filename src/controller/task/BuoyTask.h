@@ -50,6 +50,7 @@ private:
 
     HSVFilter green;
     HSVFilter red;
+    HSVFilter red2;
     cv::Mat filterRed(cv::Mat frame);
     void doGreen(cv::Mat frame);
 };
