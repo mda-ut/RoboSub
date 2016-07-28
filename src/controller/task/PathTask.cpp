@@ -126,11 +126,13 @@ void PathTask::rotate(float angle) {
  *
  */
 void PathTask::moveTo(cv::Point2f pos) {
-  //This assumes that (0,0) is in top left
+  //everything assumes that (0,0) is in top left
   float imgHeightF = static_cast<float>(imgHeight);
   float imgWidthF = static_cast<float>(imgWidth);
   int backwards=1;
   int sign;
+
+
   printf("POSITION: %f %f\n", pos.y, pos.x);
   printf("START: %f %f\n", pos.y-imgHeightF/2, pos.x-imgWidthF/2);
   if (std::abs(pos.x - imgWidthF / 2) < alignThreshold) {
@@ -185,6 +187,8 @@ void PathTask::execute() {
   float accMassX = 0;
   float accMassY = 0;
   float accAngle = 0;
+
+
   // Load properties
   PropertyReader* propReader;
   Properties* settings;
@@ -193,15 +197,32 @@ void PathTask::execute() {
   ImgData* data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
   namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control", basically an ajustable HSV filter
 
+  bool invertThresholded = std::stoi(settings->getProperty("INVERT_THRESHOLD"));
   //parameters to distinguish orange from other colors: hardcoded.
-  int iLowH = std::stoi(settings->getProperty("LOWH"));
-  int iHighH = std::stoi(settings->getProperty("HIGHH"));
 
-  int iLowS =std::stoi(settings->getProperty("LOWS"));
-  int iHighS = std::stoi(settings->getProperty("HIGHS"));
+  int LowH = std::stoi(settings->getProperty("LOWH"));
+  int HighH = std::stoi(settings->getProperty("HIGHH"));
 
-  int iLowV = std::stoi(settings->getProperty("LOWV"));
-  int iHighV = std::stoi(settings->getProperty("HIGHV"));
+  int LowS =std::stoi(settings->getProperty("LOWS"));
+  int HighS = std::stoi(settings->getProperty("HIGHS"));
+
+  int LowV = std::stoi(settings->getProperty("LOWV"));
+  int HighV = std::stoi(settings->getProperty("HIGHV"));
+
+  //if we prefer the inverted thresholds
+  if (invertThresholded){
+
+      int LowH = std::stoi(settings->getProperty("LOWH_I"));
+      int HighH = std::stoi(settings->getProperty("HIGHH_I"));
+
+      int LowS =std::stoi(settings->getProperty("LOWS_I"));
+      int HighS = std::stoi(settings->getProperty("HIGHS_I"));
+
+      int LowV = std::stoi(settings->getProperty("LOWV_I"));
+      int HighV = std::stoi(settings->getProperty("HIGHV_I"));
+
+  }
+
 
   int timeout = std::stoi(settings->getProperty("TIMEOUT"));
   alignThreshold = std::stoi(settings->getProperty("ALIGN_THRESHOLD"));
@@ -211,12 +232,12 @@ void PathTask::execute() {
 
 
   //Create trackbars in "Control" window
-  createTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
-  createTrackbar("HighH", "Control", &iHighH,179);
-  createTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
-  createTrackbar("HighS", "Control", &iHighS, 255);
-  createTrackbar("LowV", "Control", &iLowV, 255);//Value (0 - 255)
-  createTrackbar("HighV", "Control", &iHighV, 255);
+  createTrackbar("LowH", "Control", &LowH, 179); //Hue (0 - 179)
+  createTrackbar("HighH", "Control", &HighH,179);
+  createTrackbar("LowS", "Control", &LowS, 255); //Saturation (0 - 255)
+  createTrackbar("HighS", "Control", &HighS, 255);
+  createTrackbar("LowV", "Control", &LowV, 255);//Value (0 - 255)
+  createTrackbar("HighV", "Control", &HighV, 255);
 
   //Capture a temporary image from the camera
   Mat imgTmp;
@@ -251,10 +272,7 @@ void PathTask::execute() {
     Mat imgHSV;
     Mat imgThresholded;
     cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-    inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
-
-
-
+    inRange(imgHSV, Scalar(LowH, LowS, LowV), Scalar(HighH, HighS, HighV), imgThresholded); //Threshold the image
 
     //morphological opening (removes small objects from the foreground)
     erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
@@ -268,14 +286,18 @@ void PathTask::execute() {
     logger->trace("Thresholded input");
 
     //take inverted image of imgThresholded
-    threshold( imgThresholded, imgThresholdedInv, 70, 255,1);
-    imshow("imgThresholdedInv", imgThresholdedInv);
+    if(invertThresholded){
+        Mat imgThresholdedInv;
+        threshold( imgThresholded, imgThresholdedInv, 70, 255,1);
+        imshow("imgThresholdedInv", imgThresholdedInv);
+        imgThresholded= imgThresholdedInv;
+
+    }
 
     // Use Canny instead of threshold to catch squares with gradient shading
     //canny algorithm is an ubedge detector
     cv::Mat bw;
-   // cv::Canny(imgThresholded, bw, 10, 50, 5);
-    cv::Canny(imgThresholdedInv, bw, 10, 50, 5);
+    cv::Canny(imgThresholded, bw, 10, 50, 5);
     std::vector<std::vector<cv::Point> > contours;
     cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     cout << " found contours\n";
@@ -312,7 +334,7 @@ void PathTask::execute() {
      *
      */
 
-    printf("contours.size %d\n", contours.size());
+    printf("contours.size %f\n", contours.size());
     // printf("contours at 0, %d\n",contours[0]);
     int largestRectIndex = 0;
     for (int i = 0; i < contours.size(); i++){
