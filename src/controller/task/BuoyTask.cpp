@@ -44,6 +44,7 @@ void BuoyTask::move(float d){
 
         st->setTargetSpeed(0);
         st->execute();
+        usleep(deltaT*1000);
     }
 }
 
@@ -57,7 +58,7 @@ void BuoyTask::changeDepth(float h){
 
 void BuoyTask::rotate(float angle){
     println("Rotating sub by " + std::to_string(angle) + " degrees");
-    tk->setYawDelta(angle);
+    tk->setYawCurrentDelta(angle);
     tk->execute();
     deltaAngle += angle;
 //    usleep(1000000);
@@ -129,6 +130,7 @@ void BuoyTask::execute() {
 
     bool hitGreen = false;
     bool hitRed = false;
+    bool alligned = false;
 
     int retreat = 0;
     int moveDist = std::stoi(settings->getProperty("moveDist"));
@@ -165,26 +167,64 @@ void BuoyTask::execute() {
 
         //filter for a color depending if the other color is hit or not
         if (!hitRed){
-            println("Doing red");
+//            printf("Doing red [%d] [%d] [%d] [%d] [%d] [%d]\n", redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
 //            hsvFiltered = filterRed(frame);
             red.setValues(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
             hsvFiltered = red.filter(frame);
             cv::imshow("HSV", hsvFiltered);
         } else if (!hitGreen){
-            //println("Filtering green");
-            //green.filter(data);
-            done = true;
-            continue;
+//            println("Filtering green");
+            hsvFiltered = green.filter(frame);
+            cv::imshow("HSV", hsvFiltered);
         } else if (hitGreen && hitRed) {
             done = true;
             println("Done task");
             continue;
         }
 
+        if (alligned){
+            move(moveSpeed);
+            sleep(std::stoi(settings->getProperty("MOVE_TIME")));
+            if (!hitRed){
+                hitRed = true;
+                println("Hit red");
+                retreat = true;
+                alligned = false;
+            } else {
+                hitGreen = true;
+                println("Hit green");
+                retreat = true;
+            }
+        }else if (retreat){
+            if (moveWithSpeed){
+                println("Retreating");
+                move(-moveSpeed);
+                sleep(8);
+                //usleep(deltaT * 500);
+                move(0);
+                rotate(-deltaAngle);
+                sleep(3);
+            } else {
+                println("Retreating " + std::to_string(-deltaDist - 20) + "cm");
+                move(-deltaDist - 20);      //move 20cm more than i needed
+
+                //sleep(movementDelay);
+                //move the sub back to the middle
+                if (deltaAngle != -1){
+                    println("Retreat rotating " + std::to_string(deltaAngle) + " degrees");
+                    rotate(deltaAngle);
+                    println("Retreat to middle by " + std::to_string(deltaDist-20) + "cm");
+                    move (deltaDist-20);   //move 20cm less than i need
+                    rotate(-deltaAngle);
+                }
+            }
+            retreat = false;
+        }
+
         //after hitting a color, move the sub back to look for the other one
         //TODO: CALIBRATE THIS STEP
 
-        if (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad){
+        else if (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad){
             retreat = false;
             cv::Point2f cent = sf.getCenter()[0];
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));
@@ -196,20 +236,9 @@ void BuoyTask::execute() {
                     //in the middle 20% vertically
                     float d = calcDistance(sf.getRad()[0]) * 1.2;
                     float t = d/moveSpeed;
-                    println("Moving " + std::to_string(d) + "cm in " + std::to_string(t) + "s");
-                    move(moveSpeed);
-                    sleep(std::stoi(settings->getProperty("MOVE_TIME")));
-                    if (!hitRed){
-                        hitRed = true;
-                        println("Hit red");
-                        retreat = true;
-                    } else {
-                        hitGreen = true;
-                        println("Hit green");
-                        retreat = true;
-                    }
-                    logger->info("Stopping");
-                    move(0);
+                    alligned = true;
+//                    logger->info("Stopping");
+//                    move(0);
                     /*
                     //if the radius of the circle is huge, so the sub will hit it
                     if (sf.getRad()[0] > imgWidth*imgHeight/3){
@@ -235,9 +264,9 @@ void BuoyTask::execute() {
                 } else {
                     float deltaY;
                     if (cent.y > imgHeight/2) {
-                        deltaY = -2; //rise a bit
+                        deltaY = -1; //rise a bit
                     } else {
-                        deltaY = 2; //sink a bit
+                        deltaY = 1; //sink a bit
                     }
                     //float deltaY = (cent.y - imgHeight/2)/sf.getRad()[0];
                     println("Rising " + std::to_string(deltaY*100)+"cm");
@@ -254,7 +283,7 @@ void BuoyTask::execute() {
                 float dir = cent.x-imgWidth/2;
                 println("Rotating 2 degrees " + std::to_string(dir));
                 dir /= std::abs(dir);
-                rotate (2);
+                rotate (2*dir);
                 /*
                 float scale = 23/sf.getRad()[0];
                 float dist = sf.getCenter()[0].x - imgWidth/2;
@@ -271,40 +300,16 @@ void BuoyTask::execute() {
             if (sf.getRad().size() > 0) printf("Size [%f]\n", sf.getRad()[0]);
             println("Circle not found or too small, moving forward");
             //move(moveDist);
-            if (retreat) {
-                if (moveWithSpeed){
-                    println("Retreating");
-                    move(-moveSpeed);
-                    sleep(3);
-                    //usleep(deltaT * 500);
-                    move(0);
-                    rotate(-deltaAngle);
-                    sleep(3);
-                } else {
-                    println("Retreating " + std::to_string(-deltaDist - 20) + "cm");
-                    move(-deltaDist - 20);      //move 20cm more than i needed
 
-                    //sleep(movementDelay);
-                    //move the sub back to the middle
-                    if (deltaAngle != -1){
-                        println("Retreat rotating " + std::to_string(deltaAngle) + " degrees");
-                        rotate(deltaAngle);
-                        println("Retreat to middle by " + std::to_string(deltaDist-20) + "cm");
-                        move (deltaDist-20);   //move 20cm less than i need
-                        rotate(-deltaAngle);
-                    }
-                }
-                retreat = false;
-//                continue;
-            } else {
                 ///tries to look for any colors and move towards it
                 logger->info("Looking for coloured masses to turn towards");
-                std::vector<cv::Point2f> mc = sf.findMassCenter(data);
-                if (mc.size() > 0 && false) {
+                std::vector<cv::Point2f> mc = sf.findMassCenter(hsvFiltered);
+                if (mc.size() > 0) {
                     logger->info("Found coloured mass");
+                    printf("mass x[%f] y[%f]\n", mc[0].x, mc[0].y);
                     float dir = mc[0].x - imgWidth/2;
                     dir /= std::abs(dir);
-                    rotate(5 * dir);
+                    rotate(2 * dir);
                 } else {
                     ///if it dosnt see any colors, move forwards
                     logger->debug("No coloured masses found.  Moving forward for 1s");
@@ -314,7 +319,7 @@ void BuoyTask::execute() {
                     sleep(1);
                     move(0);
                 }
-            }
+
         }
         delete data;
         data = 0;

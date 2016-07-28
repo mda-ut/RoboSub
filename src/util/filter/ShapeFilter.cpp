@@ -389,7 +389,7 @@ bool ShapeFilter::findCircleExperimental(cv::Mat img){
             {
                 masscenter = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );;
                 maxmass = cur;
-                rad = pow(contourArea(contours[i])/M_PI,0);
+                rad = pow(contourArea(contours[i])/M_PI,0.6);
             }
     }
 //    cout<<(std::to_string(maxmass) + " radius\n");
@@ -397,9 +397,12 @@ bool ShapeFilter::findCircleExperimental(cv::Mat img){
     cv::circle( drawing, masscenter, 100, cv::Scalar(0,255,255), 5);
 
     imshow("circles", drawing);
-    radius.clear();
-    radius.push_back(rad);
     center.clear();
+    radius.clear();
+    if (rad != 0){
+        printf("rad [%f]\n", rad);
+    radius.push_back(rad);
     center.push_back(masscenter);
+    }
     return rad > 0;
 }

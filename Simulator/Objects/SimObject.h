@@ -47,7 +47,7 @@ protected:
 
     const float maxRotSpeed = 20;
     const float friction = 1.f;
-    const float maxSpeed = 2;
+    const float maxSpeed = 1;
 
 };
 
