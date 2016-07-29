@@ -24,6 +24,10 @@ public:
     bool filterRect(cv::Mat img, cv::Point2f &center, std::vector<cv::Point> &poly, std::vector<int> hsv);
 private:
     Logger* logger = new Logger("PathTask");
+    Timer timer;
+    std::string foldername;
+    int counter = 0;
+    const int maxRunsSaved = 6;
 
     CameraModel* cameraModel;
     TurnTask* turnTask;

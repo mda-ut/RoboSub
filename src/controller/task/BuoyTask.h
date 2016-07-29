@@ -40,6 +40,7 @@ private:
     int stopBackSpeed;
     int rotateSpeed;
     int sinkHeight;
+    int counter = 0;
 
     void move(float d);
     void changeDepth(float h);
@@ -48,10 +49,13 @@ private:
     float calcDistance(float rad);
 
 
+    int maxSavedReplays = 2;
+    std::string foldername;
+    Timer timer;
     HSVFilter green;
-    HSVFilter red;
-    HSVFilter red2;
+    std::vector<HSVFilter> reds;
     cv::Mat filterRed(cv::Mat frame);
     void doGreen(cv::Mat frame);
+    cv::Mat findCircles(cv::Mat frame);
 };
 #endif // BUOYTASK_H
