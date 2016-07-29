@@ -7,9 +7,6 @@
 #include "chrono"
 #include "thread"
 #include <cmath>
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
 
 using namespace cv;
 using namespace std;
@@ -32,6 +29,12 @@ static double lineLength (cv::Point p1, cv::Point p2) {
   return side;
 }
 
+// comparison function object
+bool compareContourAreas ( std::vector<cv::Point> contour1, std::vector<cv::Point> contour2 ) {
+    double i = fabs( contourArea(cv::Mat(contour1)) );
+    double j = fabs( contourArea(cv::Mat(contour2)) );
+    return ( i > j );
+}
 
 /**
  * Helper function to display text in the center of a contour
@@ -79,9 +82,128 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
   this->cameraModel = dynamic_cast<CameraModel*>(cameraModel);
   this->turnTask = turnTask;
   this->speedTask = speedTask;
-  moving = false;
+    moving = false;
 }
 
+bool PathTask::filterRect(Mat img, Point2f &center, std::vector<Point> &poly, vector<int> hsv) {
+    Mat imgOriginal = cv::Mat(img.clone());
+    imgOriginal = img;
+    imshow("image", imgOriginal);
+    Mat imgHSV;
+    Mat imgThresholded;
+    cvtColor(imgOriginal.clone(), imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+    inRange(imgHSV, Scalar(hsv[0], hsv[2], hsv[4]), Scalar(hsv[1], hsv[3], hsv[5]), imgThresholded); //Threshold the image
+
+    //morphological opening (removes small objects from the foreground)
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+    //morphological closing (removes small holes from the foreground)
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+    logger->trace("Thresholded input");
+
+    //take inverted image of imgThresholded
+    if(invertThresholded){
+        Mat imgThresholdedInv;
+        threshold( imgThresholded, imgThresholdedInv, 70, 255,1);
+        //imshow("imgThresholdedInv", imgThresholdedInv);
+        imgThresholded = imgThresholdedInv;
+
+    }
+
+    //place a 5 pixel border around the image to help with contour detection
+    for (int y = 0; y < imgThresholded.cols; y++) {
+        for (int x = 0; x < 5; x++) {
+            imgThresholded.at<uchar>(x,y) = 0;
+            imgThresholded.at<uchar>(imgThresholded.rows-1-x, y) = 0;
+        }
+    }
+    for (int y = 0; y < imgThresholded.rows; y++) {
+        for (int x = 0; x < 5; x++) {
+            imgThresholded.at<uchar>(y,x) = 0;
+            imgThresholded.at<uchar>(y, imgThresholded.cols-1-x) = 0;
+        }
+    }
+    // Use Canny instead of threshold to catch squares with gradient shading
+    //canny algorithm is an ubedge detector
+    cv::Mat bw;
+    cv::Canny(imgThresholded, bw, 10, 50, 5);
+    std::vector<std::vector<cv::Point> > contours;
+    cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    bool rectangleFound = false;
+    if (contours.size()>0){
+        logger->debug("found contours");
+        // sort contours
+        std::sort(contours.begin(), contours.end(), compareContourAreas);
+
+        std::vector<cv::Point> approx;
+
+        // Get the moments
+        vector<Moments> mu(contours.size() );
+        for( size_t i = 0; i < contours.size(); i++ )
+          { mu[i] = moments( contours[i], false ); }
+
+        //  Get the mass centers:
+        vector<Point2f> mc( contours.size() );
+        for( size_t i = 0; i < contours.size(); i++ ) {
+            mc[i] = Point2f( static_cast<float>(mu[i].m10/mu[i].m00) , static_cast<float>(mu[i].m01/mu[i].m00) );
+        }
+
+        /**
+         *Do you see a shape
+         *
+         */
+        for (int i = 0; i < contours.size(); i++){
+          // Approximate contour with accuracy proportional
+          // to the contour perimeter
+          cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
+
+          // Skip small or non-convex objects CS is this actually working???
+          if (std::fabs(cv::contourArea(contours[i])) < 100 || !cv::isContourConvex(approx))
+            continue;
+
+          if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
+            rectangleFound = true;
+            poly = approx;
+            center = mc[i];
+
+            cv::Mat imgLines = img.clone();
+            for (int i = 0; i < approx.size(); i++) {
+                line(imgLines, approx[i], approx[(i+1)%approx.size()], Scalar(0,0,255), 2);
+            }
+            imshow("contour", imgLines);
+            break;
+          }//if loop end
+
+        }//for loop
+    }
+    return rectangleFound;
+}
+
+//given contour, find angle of longest side(s)
+double PathTask::rectAngle(std::vector<cv::Point> contour) {
+    int maxS = maxSide(contour);
+    int numVertices=contour.size();
+    logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%numVertices));
+    float dx=contour[maxS].x - contour[(maxS+1)%numVertices].x;
+    logger->debug("dx "+ std::to_string(dx));
+    float hyp=lineLength(contour[maxS], contour[(maxS+1)%numVertices]);
+    logger->debug("hypoteneuse "+ std::to_string(hyp));
+    double ajusterAngle=(asin(dx/hyp)*180/(M_PI));
+
+    //then if you know that the difference in
+    //y is negative, then reverse the angle.
+    if ((contour[maxS].y - contour[(maxS+1)%numVertices].y)<0){
+      ajusterAngle=-1*ajusterAngle;
+    }
+
+    logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
+    //if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
+
+    return ajusterAngle;
+}
 
 /**
  * Do we use this?
@@ -95,8 +217,6 @@ void PathTask::setSpeed(float amount) {
   } else {
     moving = false;
   }
-  logger->info("Speed set to " + std::to_string(amount));
-
 }
 
 /**
@@ -168,12 +288,7 @@ void PathTask::moveTo(cv::Point2f pos) {
   }
 }
 
-// comparison function object
-bool compareContourAreas ( std::vector<cv::Point> contour1, std::vector<cv::Point> contour2 ) {
-    double i = fabs( contourArea(cv::Mat(contour1)) );
-    double j = fabs( contourArea(cv::Mat(contour2)) );
-    return ( i > j );
-}
+
 
 /**
  *The actual pathtask
@@ -195,31 +310,46 @@ void PathTask::execute() {
   propReader = new PropertyReader("settings/path_task_settings.txt");
   settings = propReader->load();
   ImgData* data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
-  namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control", basically an ajustable HSV filter
+  //namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control", basically an ajustable HSV filter
 
-  bool invertThresholded = std::stoi(settings->getProperty("INVERT_THRESHOLD"));
+  invertThresholded = std::stoi(settings->getProperty("INVERT_THRESHOLD"));
   //parameters to distinguish orange from other colors: hardcoded.
 
-  int LowH = std::stoi(settings->getProperty("LOWH"));
-  int HighH = std::stoi(settings->getProperty("HIGHH"));
+  vector<vector<int>> hsv_settings;
+  hsv_settings.resize(3);
 
-  int LowS =std::stoi(settings->getProperty("LOWS"));
-  int HighS = std::stoi(settings->getProperty("HIGHS"));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("LOWH1")));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("HIGHH1")));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("LOWS1")));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("HIGHS1")));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("LOWV1")));
+  hsv_settings[0].push_back(std::stoi(settings->getProperty("HIGHV1")));
 
-  int LowV = std::stoi(settings->getProperty("LOWV"));
-  int HighV = std::stoi(settings->getProperty("HIGHV"));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("LOWH2")));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("HIGHH2")));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("LOWS2")));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("HIGHS2")));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("LOWV2")));
+  hsv_settings[1].push_back(std::stoi(settings->getProperty("HIGHV2")));
+
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("LOWH3")));
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("HIGHH3")));
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("LOWS3")));
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("HIGHS3")));
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("LOWV3")));
+  hsv_settings[2].push_back(std::stoi(settings->getProperty("HIGHV3")));
 
   //if we prefer the inverted thresholds
   if (invertThresholded){
 
-      int LowH = std::stoi(settings->getProperty("LOWH_I"));
-      int HighH = std::stoi(settings->getProperty("HIGHH_I"));
+      int LowH1 = std::stoi(settings->getProperty("LOWH_I"));
+      int HighH1 = std::stoi(settings->getProperty("HIGHH_I"));
 
-      int LowS =std::stoi(settings->getProperty("LOWS_I"));
-      int HighS = std::stoi(settings->getProperty("HIGHS_I"));
+      int LowS1 =std::stoi(settings->getProperty("LOWS_I"));
+      int HighS1 = std::stoi(settings->getProperty("HIGHS_I"));
 
-      int LowV = std::stoi(settings->getProperty("LOWV_I"));
-      int HighV = std::stoi(settings->getProperty("HIGHV_I"));
+      int LowV1 = std::stoi(settings->getProperty("LOWV_I"));
+      int HighV1 = std::stoi(settings->getProperty("HIGHV_I"));
 
   }
 
@@ -231,22 +361,14 @@ void PathTask::execute() {
   int MIN_RECT_AREA = std::stoi(settings->getProperty("MIN_RECT_AREA"));
 
 
-  //Create trackbars in "Control" window
-  createTrackbar("LowH", "Control", &LowH, 179); //Hue (0 - 179)
-  createTrackbar("HighH", "Control", &HighH,179);
-  createTrackbar("LowS", "Control", &LowS, 255); //Saturation (0 - 255)
-  createTrackbar("HighS", "Control", &HighS, 255);
-  createTrackbar("LowV", "Control", &LowV, 255);//Value (0 - 255)
-  createTrackbar("HighV", "Control", &HighV, 255);
-
   //Capture a temporary image from the camera
   Mat imgTmp;
   //     cap.read(imgTmp);
   cout << "about to threshold image\n";
-  cv::namedWindow("imgThresholded",CV_WINDOW_AUTOSIZE);
+  /*cv::namedWindow("imgThresholded",CV_WINDOW_AUTOSIZE);
   cv::moveWindow("imgThresholded", 400, 500);
   cv::namedWindow("HSV",CV_WINDOW_AUTOSIZE);
-  cv::moveWindow("HSV", 100, 200);
+  cv::moveWindow("HSV", 100, 200);*/
 
   rotate(0);
 
@@ -255,7 +377,7 @@ void PathTask::execute() {
   bool centeredOnce = false;
   timer.start();
   while (!angleThresholdMet && timer.getTimeElapsed() < timeout){
-
+    this_thread::yield();
     delete data;
     data = dynamic_cast<ImgData*> (dynamic_cast<CameraState*>(cameraModel->getState())->getDeepState("raw"));
 
@@ -263,142 +385,50 @@ void PathTask::execute() {
     Mat imgOriginal;
     logger->trace("Got image from camera");
     imgOriginal = data->getImg();
+
+    //imshow("original", imgOriginal);
     cv::Size s = imgOriginal.size();
     imgWidth = s.width;
     imgHeight = s.height;
     float imgHeightF = static_cast<float>(imgHeight);
     float imgWidthF = static_cast<float>(imgWidth);
 
-    Mat imgHSV;
-    Mat imgThresholded;
-    cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-    inRange(imgHSV, Scalar(LowH, LowS, LowV), Scalar(HighH, HighS, HighV), imgThresholded); //Threshold the image
 
-    //morphological opening (removes small objects from the foreground)
-    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    Point2f rectCenter;
+    vector<Point> largestRect;
+    double largestArea = 0;
+    bool rectFound = false;
 
-    //morphological closing (removes small holes from the foreground)
-    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    for (int i = 0; i < 3; i++) {
+        Point2f center;
+        vector<Point> rect;
+        //filter image with each set of hsv settings
+        //Mat imgThresholded;
+        //HSVFilter hsvfilter(hsv_settings[i][0], hsv_settings[i][1], hsv_settings[i][2], hsv_settings[i][3], hsv_settings[i][4], hsv_settings[i][5]);
+        //imgThresholded = hsvfilter.filter(imgOriginal);
+        //imshow("thresh", imgThresholded);
+        bool found = filterRect(imgOriginal, center, rect, hsv_settings[i]);
+        if (found) {
+            double area = fabs(contourArea(Mat(rect)));
+            if (area > MIN_RECT_AREA) {
+                if (!rectFound || area > largestArea) {
+                    logger->debug("filter " + std::to_string(i) + " rect found location: x="+std::to_string(center.x)+" y="+std::to_string(center.y));
+                    logger->debug("filter " + std::to_string(i) + " rectangle area is " + std::to_string(area));
+                    rectCenter = center;
+                    largestRect = rect;
+                    largestArea = area;
 
-
-    logger->trace("Thresholded input");
-
-    //take inverted image of imgThresholded
-    if(invertThresholded){
-        Mat imgThresholdedInv;
-        threshold( imgThresholded, imgThresholdedInv, 70, 255,1);
-        imshow("imgThresholdedInv", imgThresholdedInv);
-        imgThresholded= imgThresholdedInv;
-
-    }
-
-    // Use Canny instead of threshold to catch squares with gradient shading
-    //canny algorithm is an ubedge detector
-    cv::Mat bw;
-    cv::Canny(imgThresholded, bw, 10, 50, 5);
-    std::vector<std::vector<cv::Point> > contours;
-    cv::findContours(bw.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    cout << " found contours\n";
-    //if there's no contour found, re-iterate the while loop
-    if (contours.size()<1){
-      setSpeed(forwardSpeed);
-      continue;
-    }
-
-    // sort contours
-    std::sort(contours.begin(), contours.end(), compareContourAreas);
-
-    std::vector<cv::Point> approx;
-
-    // Get the moments
-    vector<Moments> mu(contours.size() );
-    for( size_t i = 0; i < contours.size(); i++ )
-      { mu[i] = moments( contours[i], false ); }
-
-    //  Get the mass centers:
-    vector<Point2f> mc( contours.size() );
-    for( size_t i = 0; i < contours.size(); i++ ) {
-        mc[i] = Point2f( static_cast<float>(mu[i].m10/mu[i].m00) , static_cast<float>(mu[i].m01/mu[i].m00) );
-    }
-
-
-    cv::circle(imgHSV, mc[0], 5, Scalar(180,105,255));
-
-    imshow("HSV", imgHSV);
-    imshow("bw", bw);
-
-    /**
-     *Do you see a shape
-     *
-     */
-
-    printf("contours.size %f\n", contours.size());
-    // printf("contours at 0, %d\n",contours[0]);
-    int largestRectIndex = 0;
-    for (int i = 0; i < contours.size(); i++){
-
-      //printf("Contours size: %d\n", contours.size());
-      // Approximate contour with accuracy proportional
-      // to the contour perimeter
-      cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
-
-      // Skip small or non-convex objects CS is this actually working???
-      if (std::fabs(cv::contourArea(contours[i])) < 100 || !cv::isContourConvex(approx))
-        continue;
-
-      // draw approx on the img threshold screen
-      //             for (int i = 0; i < approx.size(); i++){
-      //                 cv::circle(bw, approx.at(i), 5, Scalar(255,0,0));
-      //             }
-
-      //             imshow("imgThresholded", bw);
-
-
-      /**
-       *orient relative to the sub IF a rectangle shape has been found
-       *
-       */
-      if (approx.size() == 4 || approx.size() == 5 || approx.size() == 6){
-
-        //find distance between the contour and the centre
-        //                slide(deltaX)
-        /*
-         *Find the angle relative to vertical of the max side
-         *
-         */
-        largestRectIndex = i;
-        int maxS = maxSide(approx);
-        int numVertices=approx.size();
-        logger->debug("MAX SIDE point 1 "+ std::to_string(maxS)+ "MAX SIDE point 2 "+std::to_string((maxS +1)%numVertices));
-        float dx=approx[maxS].x - approx[(maxS+1)%numVertices].x;
-        logger->debug("dx "+ std::to_string(dx));
-        float hyp=lineLength(approx[maxS], approx[(maxS+1)%numVertices]);
-        logger->debug("hypoteneuse "+ std::to_string(hyp));
-        ajusterAngle=(asin(dx/hyp)*180/(M_PI));
-
-        //then if you know that the difference in
-        //y is negative, then reverse the angle.
-        if ((approx[maxS].y - approx[(maxS+1)%numVertices].y)<0){
-          ajusterAngle=-1*ajusterAngle;
+                    rectFound = true;
+                }
+            } else {
+                logger->debug("found rect but too small, area = " +std::to_string(area));
+            }
         }
-
-        logger->info("the path is "+ std::to_string(ajusterAngle)+"degrees from the reference");
-        //if(abs(ajusterAngle) < 2.5) angleThresholdMet = true; // threshold to get out of loop
-
-        cv::Mat imgLines = imgOriginal.clone();
-        line(imgLines, approx[0], approx[1], Scalar(0,0,255), 2);
-        line(imgLines, approx[1], approx[2], Scalar(0,0,255), 2);
-        line(imgLines, approx[2], approx[3], Scalar(0,0,255), 2);
-        line(imgLines, approx[3], approx[0], Scalar(0,0,255), 2);
-        imshow("contours", imgLines);
-        break;
-
-      }//if loop end
-
-    }//for loop
-    //imshow("imgThresholded", bw);
+    }
+    if (!rectFound) {
+        setSpeed(forwardSpeed);
+        continue;
+    }
 
     /**
      * Are we close enough?
@@ -406,7 +436,7 @@ void PathTask::execute() {
      */
     bool closeEnough=false;
     cv::Point origin( imgWidthF/2, imgHeightF/2);
-    if (lineLength(mc[largestRectIndex], origin)<30) {
+    if (lineLength(rectCenter, origin)<50) {
       closeEnough=true;
       setSpeed(0);
     }
@@ -420,18 +450,13 @@ void PathTask::execute() {
     if (!closeEnough && !centeredOnce){
       //if we aren't close enough
       //go back to the beginning of loop to try again
-      //printf("contours.size %d\n", contours.size());  
+      //printf("contours.size %d\n", contours.size());
       accumulator++;
-      accMassX += mc[largestRectIndex].x;
-      accMassY += mc[largestRectIndex].y;
+      accMassX += rectCenter.x;
+      accMassY += rectCenter.y;
       if (accumulator == 15){
         cv::Point avgMass( accMassX/15, accMassY/15);
-        printf("contour size %f\n", fabs( contourArea(cv::Mat(contours[largestRectIndex])) ));
-        if (fabs( contourArea(cv::Mat(contours[largestRectIndex])) ) > MIN_RECT_AREA) {
-            moveTo(avgMass);
-        } else {
-            setSpeed(10);
-        }
+        moveTo(avgMass);
         accMassX = 0;
         accMassY = 0;
         accumulator = 0;
@@ -440,6 +465,7 @@ void PathTask::execute() {
     }
     //rotating relative to the rectangle we have found.
     else {
+      ajusterAngle = rectAngle(largestRect);
       centeredOnce = true;
       accAngle += ajusterAngle;
       centeredAccumulator++;
@@ -457,6 +483,7 @@ void PathTask::execute() {
 
       }
     }
+    this_thread::yield();
   }
   logger->info("EXITING");
   return;
