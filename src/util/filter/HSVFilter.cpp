@@ -49,7 +49,7 @@ cv::Mat HSVFilter::filter(cv::Mat mat) {
     cv::Mat imgThresh = cv::Mat(mat.clone());
 
     //cv::cvtColor(mat, imgHSV, cv::COLOR_RGB2BGR); //Convert the captured frame from BGR to HSV
-    cv::cvtColor(mat,imgHSV,cv::COLOR_RGB2HSV);
+    cv::cvtColor(mat,imgHSV,cv::COLOR_BGR2HSV);
     cv::inRange(imgHSV, cv::Scalar(lowH, lowS, lowV),
                 cv::Scalar(highH, highS, highV), imgThresh); //Threshold the image
 
@@ -60,8 +60,6 @@ cv::Mat HSVFilter::filter(cv::Mat mat) {
     //morphological closing (fill small holes in the foreground)
     cv::dilate(imgThresh, imgThresh, getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) );
     cv::erode(imgThresh, imgThresh, getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) );
-
-    cv::imshow("HSV", imgThresh);
 
     return imgThresh;
 }

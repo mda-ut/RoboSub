@@ -92,6 +92,8 @@ public:
      */
     std::vector<float> getRad();
 
+    std::vector<std::vector<cv::Point> > getContours();
+
 private:
     int shape;              //shape to look for
     unsigned int max;
@@ -102,6 +104,9 @@ private:
     ///circles
     std::vector<float> radius;
     std::vector<cv::Point2f> center;
+
+    // Contours
+    std::vector<std::vector<cv::Point> > contours;
 
     Logger* logger = new Logger("ShapeFilter");
     bool debug = false;

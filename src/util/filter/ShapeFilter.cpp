@@ -53,6 +53,11 @@ std::vector<float> ShapeFilter::getRad(){
     return this->radius;
 }
 
+std::vector<std::vector<cv::Point> > ShapeFilter::getContours()
+{
+    return this->contours;
+}
+
 std::vector<cv::Point2f> ShapeFilter::getCenter(){
     return this->center;
 }
@@ -61,7 +66,6 @@ bool ShapeFilter::findCirc(cv::Mat img){
     if (shape == 3) return findCircleExperimental(img);
     //getting the contours
     cv::Mat canny;
-    std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
 
     float radius;

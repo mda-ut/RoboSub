@@ -1,5 +1,7 @@
 #include "BuoyTask.h"
 
+#include <opencv2/video/tracking.hpp>
+
 
 BuoyTask::BuoyTask(Model* camModel, TurnTask* tk, SpeedTask* st, DepthTask* dt)
 {
@@ -24,6 +26,18 @@ BuoyTask::BuoyTask(Model* camModel, TurnTask* tk, SpeedTask* st, DepthTask* dt)
     stopBackSpeed= std::stoi(settings->getProperty("stopBackSpeed"));
     rotateSpeed= std::stoi(settings->getProperty("rotateSpeed"));
     sinkHeight= std::stoi(settings->getProperty("sinkHeight"));
+
+    if (access(("Buoy"+std::to_string(maxSavedReplays)).c_str(), F_OK) == 0){
+        system("rm Buoy* -r");
+    }
+
+    for (int i = 0; i <= maxSavedReplays; i++){
+        foldername = "Buoy" + std::to_string(i);
+        if (access(foldername.c_str(), F_OK) != 0){
+            system(("mkdir " + foldername).c_str());
+            break;
+        }
+    }
 }
 BuoyTask::~BuoyTask(){
     delete logger;
@@ -59,8 +73,7 @@ void BuoyTask::changeDepth(float h){
     printf("Changing depth [%f]\n", h);
     dt->setDepthDelta(h);
     dt->execute();
-//    usleep(5000000);
-    sleep(sinkTime);
+//    usleep(5000000)    sleep(sinkTime);
 }
 
 void BuoyTask::rotate(float angle){
@@ -113,7 +126,69 @@ float BuoyTask::calcDistance(float rad){
             imgWidth/rad * 23 * CONSX)/2;
 }
 
+#define RED "Red"
+#define GRN "Green"
+
 void BuoyTask::execute() {
+
+    // >>>> Kalman Filter
+   int stateSize = 6;
+   int measSize = 4;
+   int contrSize = 0;
+
+   unsigned int type = CV_32F;
+   cv::KalmanFilter kf(stateSize, measSize, contrSize, type);
+
+   cv::Mat state(stateSize, 1, type);  // [x,y,v_x,v_y,w,h]
+   //kf.statePost.create(stateSize, 1, type);
+   cv::Mat meas(measSize, 1, type);    // [z_x,z_y,z_w,z_h]
+   //cv::Mat procNoise(stateSize, 1, type)
+   // [E_x,E_y,E_v_x,E_v_y,E_w,E_h]
+
+   // Transition State Matrix A
+   // Note: set dT at each processing step!
+   // [ 1 0 dT 0  0 0 ]
+   // [ 0 1 0  dT 0 0 ]
+   // [ 0 0 1  0  0 0 ]
+   // [ 0 0 0  1  0 0 ]
+   // [ 0 0 0  0  1 0 ]
+   // [ 0 0 0  0  0 1 ]
+   cv::setIdentity(kf.transitionMatrix);
+
+   // Measure Matrix H
+   // [ 1 0 0 0 0 0 ]
+   // [ 0 1 0 0 0 0 ]
+   // [ 0 0 0 0 1 0 ]
+   // [ 0 0 0 0 0 1 ]
+   kf.measurementMatrix = cv::Mat::zeros(measSize, stateSize, type);
+   kf.measurementMatrix.at<float>(0) = 1.0f;
+   kf.measurementMatrix.at<float>(7) = 1.0f;
+   kf.measurementMatrix.at<float>(16) = 1.0f;
+   kf.measurementMatrix.at<float>(23) = 1.0f;
+
+   // Process Noise Covariance Matrix Q
+   // [ Ex 0  0    0 0    0 ]
+   // [ 0  Ey 0    0 0    0 ]
+   // [ 0  0  Ev_x 0 0    0 ]
+   // [ 0  0  0    1 Ev_y 0 ]
+   // [ 0  0  0    0 1    Ew ]
+   // [ 0  0  0    0 0    Eh ]
+   //cv::setIdentity(kf.processNoiseCov, cv::Scalar(1e-2));
+   kf.processNoiseCov.at<float>(0) = 1e-2;
+   kf.processNoiseCov.at<float>(7) = 1e-2;
+   kf.processNoiseCov.at<float>(14) = 2.0f;
+   kf.processNoiseCov.at<float>(21) = 1.0f;
+   kf.processNoiseCov.at<float>(28) = 1e-2;
+   kf.processNoiseCov.at<float>(35) = 1e-2;
+
+   // Measures Noise Covariance Matrix R
+   cv::setIdentity(kf.measurementNoiseCov, cv::Scalar(1e-1));
+   // <<<< Kalman Filter
+
+   char ch = 0;
+   double ticks = 0;
+   bool found = false;
+   int notFoundCount = 0;
 
     int greenHSV[6];
     for (int i = 0; i < 6; i++){
@@ -129,8 +204,9 @@ void BuoyTask::execute() {
         redHSV2[i] = std::stoi(settings->getProperty("rr"+std::to_string(i+1)));
     }
 
-    red = HSVFilter(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
-    red2 = HSVFilter(redHSV2[0], redHSV2[1], redHSV2[2], redHSV2[3], redHSV2[4], redHSV2[5]);
+    reds.push_back(HSVFilter(redHSV[0],     redHSV[1],  redHSV[2],  redHSV[3],  redHSV[4],  redHSV[5]));
+    HSVFilter temp = HSVFilter(redHSV2[0],    redHSV2[1], redHSV2[2], redHSV2[3], redHSV2[4], redHSV2[5]);
+    reds.push_back(temp);
     //only look for 1 circle
     ShapeFilter sf = ShapeFilter(3, 1);
 
@@ -150,30 +226,41 @@ void BuoyTask::execute() {
     float deltaT = 0;
 
     bool done = false;
-    cv::namedWindow("HSV", CV_WINDOW_AUTOSIZE);
-    cv::moveWindow("HSV", 1500, 400);
-    cv::namedWindow("HSV2", CV_WINDOW_AUTOSIZE);
-    cv::moveWindow("HSV2", 1500, 100);
-    cv::namedWindow("Center", CV_WINDOW_AUTOSIZE);
+    const int SIZEX = 320, SIZEY = 240;
+    cv::namedWindow(RED, CV_WINDOW_NORMAL);
+    cv::resizeWindow(RED, SIZEX, SIZEY+200);
+    cv::moveWindow(RED, 1500, 400);
+    cv::namedWindow(GRN, CV_WINDOW_NORMAL);
+    cv::resizeWindow(GRN, SIZEX, SIZEY+200);
+    cv::moveWindow(GRN, 1500, 100);
+    cv::namedWindow("Center", CV_WINDOW_NORMAL);
+    cv::resizeWindow("Center", SIZEX, SIZEY);
     cv::moveWindow("Center", 1100, 100);
-    cv::namedWindow("circles", CV_WINDOW_AUTOSIZE);
+    cv::namedWindow("circles", CV_WINDOW_NORMAL);
+    cv::resizeWindow("circles", SIZEX, SIZEY);
     cv::moveWindow("circles", 1100, 400);
 
-    cvCreateTrackbar("LH", "HSV", &redHSV[0], 179);
-    cvCreateTrackbar("HH", "HSV", &redHSV[1], 179);
-    cvCreateTrackbar("LS", "HSV", &redHSV[2], 255);
-    cvCreateTrackbar("HS", "HSV", &redHSV[3], 255);
-    cvCreateTrackbar("LV", "HSV", &redHSV[4], 255);
-    cvCreateTrackbar("HV", "HSV", &redHSV[5], 255);
+    cvCreateTrackbar("LH", RED, &redHSV[0], 179);
+    cvCreateTrackbar("HH", RED, &redHSV[1], 179);
+    cvCreateTrackbar("LS", RED, &redHSV[2], 255);
+    cvCreateTrackbar("HS", RED, &redHSV[3], 255);
+    cvCreateTrackbar("LV", RED, &redHSV[4], 255);
+    cvCreateTrackbar("HV", RED, &redHSV[5], 255);
 
-    cvCreateTrackbar("LH", "HSV2", &greenHSV[0], 179);
-    cvCreateTrackbar("HH", "HSV2", &greenHSV[1], 179);
-    cvCreateTrackbar("LS", "HSV2", &greenHSV[2], 255);
-    cvCreateTrackbar("HS", "HSV2", &greenHSV[3], 255);
-    cvCreateTrackbar("LV", "HSV2", &greenHSV[4], 255);
-    cvCreateTrackbar("HV", "HSV2", &greenHSV[5], 255);
+    cvCreateTrackbar("LH", GRN, &greenHSV[0], 179);
+    cvCreateTrackbar("HH", GRN, &greenHSV[1], 179);
+    cvCreateTrackbar("LS", GRN, &greenHSV[2], 255);
+    cvCreateTrackbar("HS", GRN, &greenHSV[3], 255);
+    cvCreateTrackbar("LV", GRN, &greenHSV[4], 255);
+    cvCreateTrackbar("HV", GRN, &greenHSV[5], 255);
 
     while (!done) {
+        double precTick = ticks;
+        ticks = (double) cv::getTickCount();
+
+        double dT = (ticks - precTick) / cv::getTickFrequency(); //seconds
+
+        // Frame acquisition
         std::string s = "raw";
         ImgData* data = dynamic_cast<ImgData*>
                 (dynamic_cast<CameraState*>
@@ -187,15 +274,13 @@ void BuoyTask::execute() {
         //filter for a color depending if the other color is hit or not
         if (!hitRed){
 //            printf("Doing red [%d] [%d] [%d] [%d] [%d] [%d]\n", redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
-//            hsvFiltered = filterRed(frame);
-            red.setValues(redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
-            hsvFiltered = red.filter(frame);
-            cv::imshow("HSV", hsvFiltered);
+            hsvFiltered = filterRed(frame);
+            cv::imshow(RED, hsvFiltered);
         } else if (!hitGreen){
 //            println("Filtering green");
             green.setValues(greenHSV[0], greenHSV[1], greenHSV[2], greenHSV[3], greenHSV[4], greenHSV[5]);
             hsvFiltered = green.filter(frame);
-            cv::imshow("HSV2", hsvFiltered);
+            cv::imshow(GRN, hsvFiltered);
         } else if (hitGreen && hitRed) {
             done = true;
             println("Done task");
@@ -245,12 +330,96 @@ void BuoyTask::execute() {
         //after hitting a color, move the sub back to look for the other one
         //TODO: CALIBRATE THIS STEP
 
-        else if ( (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad) || (sf.findCirc(red2.filter(frame)) && sf.getRad()[0] > closeRad) ){
+        else if ( (sf.findCirc(hsvFiltered) && sf.getRad()[0] > closeRad)/* || (sf.findCirc(red2.filter(frame)) && sf.getRad()[0] > closeRad)*/ ){
             retreat = false;
             cv::Point2f cent = sf.getCenter()[0];
+
+            // Get prediction from Kalman Filter and use as result
+            // >>>> Matrix A
+            kf.transitionMatrix.at<float>(2) = dT;
+            kf.transitionMatrix.at<float>(9) = dT;
+            // <<<< Matrix A
+
+            std::cout << "dT:" << std::endl << dT << std::endl;
+
+            state = kf.predict();
+            std::cout << "State post:" << std::endl << state << std::endl;
+            cv::Rect predRect;
+            predRect.width = state.at<float>(4);
+            predRect.height = state.at<float>(5);
+            predRect.x = state.at<float>(0) - predRect.width / 2;
+            predRect.y = state.at<float>(1) - predRect.height / 2;
+            cent.x = state.at<float>(0);
+            cent.y = state.at<float>(1);
+            cv::circle(frame, cent, 2, CV_RGB(255,0,0), -1);
+            cv::rectangle(frame, predRect, CV_RGB(255,0,0), 2);
+
+            // Update Kalman Filter
+            notFoundCount = 0;
+
+//            meas.at<float>(0) = ballsBox[0].x + ballsBox[0].width / 2;
+//            meas.at<float>(1) = ballsBox[0].y + ballsBox[0].height / 2;
+//            meas.at<float>(2) = (float)ballsBox[0].width;
+//            meas.at<float>(3) = (float)ballsBox[0].height;
+
+            meas.at<float>(0) = sf.getCenter()[0].x;
+            meas.at<float>(1) = sf.getCenter()[0].y;
+            //TODO: Get actual contour bounding box from shape filter
+
+            std::vector<std::vector<cv::Point> > balls;
+            std::vector<cv::Rect> ballsBox;
+            std::vector<std::vector<cv::Point> > contours = sf.getContours();
+
+            for (size_t i = 0; i < contours.size(); i++)       {
+                cv::Rect bBox;
+                bBox = cv::boundingRect(contours[i]);
+                float ratio = (float) bBox.width / (float) bBox.height;
+                if (ratio > 1.0f)
+                  ratio = 1.0f / ratio;
+
+               // Searching for a bBox almost square
+               if (ratio > 0.75 && bBox.area() >= 400)
+               {
+                  balls.push_back(contours[i]);
+                  ballsBox.push_back(bBox);
+               }
+            }
+
+            if (ballsBox.size() > 0) {
+                meas.at<float>(2) = (float)ballsBox[0].width;
+                meas.at<float>(3) = (float)ballsBox[0].height;
+            } else {
+                meas.at<float>(2) = (float)0;
+                meas.at<float>(3) = (float)0;
+            }
+
+            if (!found) // First detection!
+            {
+               // >>>> Initialization
+               kf.errorCovPre.at<float>(0) = 1; // px
+               kf.errorCovPre.at<float>(7) = 1; // px
+               kf.errorCovPre.at<float>(14) = 1;
+               kf.errorCovPre.at<float>(21) = 1;
+               kf.errorCovPre.at<float>(28) = 1; // px
+               kf.errorCovPre.at<float>(35) = 1; // px
+
+               state.at<float>(0) = meas.at<float>(0);
+               state.at<float>(1) = meas.at<float>(1);
+               state.at<float>(2) = 0;
+               state.at<float>(3) = 0;
+               state.at<float>(4) = meas.at<float>(2);
+               state.at<float>(5) = meas.at<float>(3);
+               // <<<< Initialization
+
+               found = true;
+            }
+            else
+               kf.correct(meas); // Kalman Correction
+
+            std::cout << "Measure matrix:" << std::endl << meas << std::endl;
+
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));
-            cv::imshow("Center",frame);
-            cv::waitKey(1);
+
             if (std::abs(cent.x - imgWidth/2) < imgWidth/100*3){
                 //in the middle 20% of the screen horizontally
                 if (std::abs(cent.y - imgHeight / 2) < imgHeight / 100 * 3) {
@@ -316,6 +485,19 @@ void BuoyTask::execute() {
             }
         } else {
             ///CIRCLES NOT FOUND
+
+            notFoundCount++;
+            std::cout << "notFoundCount:" << notFoundCount << std::endl;
+            if( notFoundCount >= 10 )
+            {
+               found = false;
+            }
+            else {
+
+                kf.statePost = state;
+
+            }
+
             ///ROTATE/MOVE SUB
             //rotate(rotateAng);
             if (sf.getRad().size() > 0) printf("Size [%f]\n", sf.getRad()[0]);
@@ -342,6 +524,16 @@ void BuoyTask::execute() {
                 }
 
         }
+
+        char buffer[80];
+        strftime(buffer, 80, "%I:%M:%S", timer.getTimeStamp());
+        cv::putText(frame, buffer, cv::Point(0,cv::getTextSize(buffer, cv::FONT_HERSHEY_PLAIN, 1, 2, 0).height), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 2);
+
+        cv::imwrite(foldername+"/frame"+std::to_string(counter++)+".bmp", frame);
+
+        cv::imshow("Center",frame);
+        cv::waitKey(1);
+
         delete data;
         data = 0;
 //        usleep(33000);
@@ -349,6 +541,12 @@ void BuoyTask::execute() {
 }
 
 cv::Mat BuoyTask::filterRed(cv::Mat frame){
-    cv::Mat hsvFiltered = red.filter(frame);
-    cv::imshow("HSV", hsvFiltered);
+    cv::Mat hsvFiltered = reds[0].filter(frame);
+    cv::Mat hsvFiltered2 = reds[1].filter(frame);
+    cv::imshow(RED, hsvFiltered);
+    return hsvFiltered;
+}
+
+cv::Mat BuoyTask::findCircles(cv::Mat frame){
+
 }
