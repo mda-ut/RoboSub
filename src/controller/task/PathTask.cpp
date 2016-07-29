@@ -83,6 +83,12 @@ PathTask::PathTask(Model* cameraModel, TurnTask *turnTask, SpeedTask *speedTask)
   this->turnTask = turnTask;
   this->speedTask = speedTask;
     moving = false;
+
+    char buffer[80];
+    strftime(buffer, 80, "PATH%I:%M:%S", timer.getTimeStamp());
+    foldername = std::string(buffer);
+    system( ("mkdir "+foldername).c_str() );
+
 }
 
 bool PathTask::filterRect(Mat img, Point2f &center, std::vector<Point> &poly, vector<int> hsv) {
@@ -386,6 +392,13 @@ void PathTask::execute() {
     logger->trace("Got image from camera");
     imgOriginal = data->getImg();
 
+
+    Mat imgClone = imgOriginal.clone();
+    char buffer[80];
+    strftime(buffer, 80, "%I:%M:%S", timer.getTimeStamp());
+    cv::putText(imgClone, buffer, cv::Point(0,cv::getTextSize(buffer, cv::FONT_HERSHEY_PLAIN, 1, 2, 0).height), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 2);
+    cv::imwrite(foldername+"/frame"+std::to_string(counter++)+".bmp", imgClone);
+
     //imshow("original", imgOriginal);
     cv::Size s = imgOriginal.size();
     imgWidth = s.width;
@@ -483,6 +496,7 @@ void PathTask::execute() {
 
       }
     }
+
     this_thread::yield();
   }
   logger->info("EXITING");
