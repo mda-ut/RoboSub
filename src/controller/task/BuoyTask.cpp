@@ -44,8 +44,8 @@ BuoyTask::~BuoyTask(){
 }
 
 void BuoyTask::println(std::string s){
-//    logger->debug(s);
-    std::cout<<s<<std::endl;
+    logger->info(s);
+//    std::cout<<s<<std::endl;
 }
 
 void BuoyTask::move(float d){
@@ -70,7 +70,7 @@ void BuoyTask::move(float d){
 }
 
 void BuoyTask::changeDepth(float h){
-    printf("Changing depth [%f]\n", h);
+    logger->info("Changing depth " + std::to_string(h));
     dt->setDepthDelta(h);
     dt->execute();
 //    usleep(5000000)    sleep(sinkTime);
@@ -81,6 +81,7 @@ void BuoyTask::rotate(float angle){
     tk->setYawCurrentDelta(angle);
     tk->execute();
     deltaAngle += angle;
+    println("Delta Angle " + std::to_string(deltaAngle));
 //    usleep(1000000);
     sleep(rotateTime);
 }
@@ -227,12 +228,12 @@ void BuoyTask::execute() {
 
     bool done = false;
     const int SIZEX = 320, SIZEY = 240;
-    cv::namedWindow(RED, CV_WINDOW_NORMAL);
-    cv::resizeWindow(RED, SIZEX, SIZEY+200);
-    cv::moveWindow(RED, 1500, 400);
-    cv::namedWindow(GRN, CV_WINDOW_NORMAL);
-    cv::resizeWindow(GRN, SIZEX, SIZEY+200);
-    cv::moveWindow(GRN, 1500, 100);
+//    cv::namedWindow(RED, CV_WINDOW_NORMAL);
+//    cv::resizeWindow(RED, SIZEX, SIZEY+200);
+//    cv::moveWindow(RED, 1500, 400);
+//    cv::namedWindow(GRN, CV_WINDOW_NORMAL);
+//    cv::resizeWindow(GRN, SIZEX, SIZEY+200);
+//    cv::moveWindow(GRN, 1500, 100);
     cv::namedWindow("Center", CV_WINDOW_NORMAL);
     cv::resizeWindow("Center", SIZEX, SIZEY);
     cv::moveWindow("Center", 1100, 100);
@@ -240,19 +241,19 @@ void BuoyTask::execute() {
     cv::resizeWindow("circles", SIZEX, SIZEY);
     cv::moveWindow("circles", 1100, 400);
 
-    cvCreateTrackbar("LH", RED, &redHSV[0], 179);
-    cvCreateTrackbar("HH", RED, &redHSV[1], 179);
-    cvCreateTrackbar("LS", RED, &redHSV[2], 255);
-    cvCreateTrackbar("HS", RED, &redHSV[3], 255);
-    cvCreateTrackbar("LV", RED, &redHSV[4], 255);
-    cvCreateTrackbar("HV", RED, &redHSV[5], 255);
+//    cvCreateTrackbar("LH", RED, &redHSV[0], 179);
+//    cvCreateTrackbar("HH", RED, &redHSV[1], 179);
+//    cvCreateTrackbar("LS", RED, &redHSV[2], 255);
+//    cvCreateTrackbar("HS", RED, &redHSV[3], 255);
+//    cvCreateTrackbar("LV", RED, &redHSV[4], 255);
+//    cvCreateTrackbar("HV", RED, &redHSV[5], 255);
 
-    cvCreateTrackbar("LH", GRN, &greenHSV[0], 179);
-    cvCreateTrackbar("HH", GRN, &greenHSV[1], 179);
-    cvCreateTrackbar("LS", GRN, &greenHSV[2], 255);
-    cvCreateTrackbar("HS", GRN, &greenHSV[3], 255);
-    cvCreateTrackbar("LV", GRN, &greenHSV[4], 255);
-    cvCreateTrackbar("HV", GRN, &greenHSV[5], 255);
+//    cvCreateTrackbar("LH", GRN, &greenHSV[0], 179);
+//    cvCreateTrackbar("HH", GRN, &greenHSV[1], 179);
+//    cvCreateTrackbar("LS", GRN, &greenHSV[2], 255);
+//    cvCreateTrackbar("HS", GRN, &greenHSV[3], 255);
+//    cvCreateTrackbar("LV", GRN, &greenHSV[4], 255);
+//    cvCreateTrackbar("HV", GRN, &greenHSV[5], 255);
 
     while (!done) {
         double precTick = ticks;
@@ -271,16 +272,27 @@ void BuoyTask::execute() {
         cv::Mat hsvFiltered;
 //        cv::imshow("hsv",data->getImg());
 
+//        char buffer[80];
+//        strftime(buffer, 80, "%I:%M:%S", timer.getTimeStamp());
+//        cv::putText(frame, buffer, cv::Point(0,cv::getTextSize(buffer, cv::FONT_HERSHEY_PLAIN, 1, 2, 0).height), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 2);
+        cv::imwrite(foldername+"/rawframe"+std::to_string(counter++)+".bmp", frame);
+
+
         //filter for a color depending if the other color is hit or not
         if (!hitRed){
 //            printf("Doing red [%d] [%d] [%d] [%d] [%d] [%d]\n", redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
             hsvFiltered = filterRed(frame);
-            cv::imshow(RED, hsvFiltered);
+//            cv::imshow(RED, hsvFiltered);
         } else if (!hitGreen){
+            //not gonna do green
+            done = true;
+            println("Done task");
+            continue;
+
 //            println("Filtering green");
             green.setValues(greenHSV[0], greenHSV[1], greenHSV[2], greenHSV[3], greenHSV[4], greenHSV[5]);
             hsvFiltered = green.filter(frame);
-            cv::imshow(GRN, hsvFiltered);
+//            cv::imshow(GRN, hsvFiltered);
         } else if (hitGreen && hitRed) {
             done = true;
             println("Done task");
@@ -522,14 +534,13 @@ void BuoyTask::execute() {
                     sleep(forwardBurstTime/2);
                     move(0);
                 }
-
         }
 
         char buffer[80];
         strftime(buffer, 80, "%I:%M:%S", timer.getTimeStamp());
         cv::putText(frame, buffer, cv::Point(0,cv::getTextSize(buffer, cv::FONT_HERSHEY_PLAIN, 1, 2, 0).height), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 2);
 
-        cv::imwrite(foldername+"/frame"+std::to_string(counter++)+".bmp", frame);
+        cv::imwrite(foldername+"/frame"+std::to_string(counter)+".bmp", frame);
 
         cv::imshow("Center",frame);
         cv::waitKey(1);
@@ -538,12 +549,22 @@ void BuoyTask::execute() {
         data = 0;
 //        usleep(33000);
     }
+
+    println("Rotating final " + std::to_string(-deltaAngle));
+
+    rotate(-deltaAngle);
+    sleep(retreatRotateTime);
+    move(moveSpeed);
+    sleep(forwardBurstTime);
+    move(stopBackSpeed);
+    sleep(forwardBurstTime/2);
+    move(0);
 }
 
 cv::Mat BuoyTask::filterRed(cv::Mat frame){
     cv::Mat hsvFiltered = reds[0].filter(frame);
     cv::Mat hsvFiltered2 = reds[1].filter(frame);
-    cv::imshow(RED, hsvFiltered);
+//    cv::imshow(RED, hsvFiltered);
     return hsvFiltered;
 }
 
