@@ -64,6 +64,7 @@ HEADERS += \
            src/controller/task/BuoyTask.h \
            src/controller/task/DepthTask.h \
            src/controller/task/GateTask.h \
+           src/controller/task/ChannelTask.h \
            src/controller/task/MotorTask.h \
            src/controller/task/PathTask.h \
            src/controller/task/PowerTask.h \
@@ -142,6 +143,7 @@ SOURCES += src/Main.cpp \
            src/controller/task/BuoyTask.cpp \
            src/controller/task/DepthTask.cpp \
            src/controller/task/GateTask.cpp \
+           src/controller/task/ChannelTask.cpp \
            src/controller/task/MotorTask.cpp \
            src/controller/task/PathTask.cpp \
            src/controller/task/PowerTask.cpp \
@@ -208,4 +210,5 @@ DISTFILES += \
     src/settings/buoy_task_settings.txt \
     src/settings/path_task_settings.txt \
     src/settings/gate_task_settings.txt \
-    src/settings/competition_settings.txt
+    src/settings/competition_settings.txt \
+    src/settings/channel_task_settings.txt

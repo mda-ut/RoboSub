@@ -106,7 +106,7 @@ void Controller::handleRiseButtonClick() {
 
 void Controller::handleGateTaskClick() {
     logger->info("Adding Gate Task to queue");
-    addTaskToQueue(TaskFactory::createGateTask(models[FPGA], targetDepth, targetYaw));
+    addTaskToQueue(TaskFactory::createChannelTask(models[FPGA], targetDepth, targetYaw));
 }
 
 void Controller::handlePathTaskClick() {

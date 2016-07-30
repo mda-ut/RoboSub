@@ -1,0 +1,22 @@
+POOL_SURFACE_HEIGHT = 375
+
+START_DEPTH_DELTA = 150
+
+# Number of seconds to wait for depth tasks
+DEPTH_WAIT_TIME = 8
+
+FORWARD_SPEED = 80
+# Number of seconds to move forward for
+FORWARD_TIME = 30
+
+
+
+#yellow filter
+LOWH = 0;
+HIGHH = 179;
+
+LOWS = 74;
+HIGHS = 255;
+
+LOWV = 0;
+HIGHV = 255;

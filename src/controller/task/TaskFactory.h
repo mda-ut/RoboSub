@@ -15,6 +15,8 @@
 #include "DepthTask.h"
 #include "SpeedTask.h"
 #include "GateTask.h"
+#include "ChannelTask.h"
+#include "PortalTask.h"
 #include "PathTask.h"
 #include "CompetitionTask.h"
 #include "BuoyTask.h"
@@ -37,6 +39,8 @@ public:
     static CompetitionTask* createCompetitionTask(Model* forwardCamModel, Model* downCamModel, Model* fpgaModel, int& targetDepth, int& targetYaw);
 
     static GateTask* createGateTask(Model* fpgaModel, int& targetDepth, int& targetYaw);
+
+    static ChannelTask* createChannelTask(Model* fpgaModel, int& targetDepth, int& targetYaw);
 
     static PathTask* createPathTask(Model* downCamModel, Model* fpgaModel, int& targetYaw);
 
