@@ -132,6 +132,12 @@ float BuoyTask::calcDistance(float rad){
 
 void BuoyTask::execute() {
 
+    if (std::stoi(settings->getProperty("YOLO")) == 1){
+        changeDepth(-300);
+        move(moveSpeed);
+        sleep(std::stoi(settings->getProperty("YOLOSPEED")));
+    }
+
     // >>>> Kalman Filter
    int stateSize = 6;
    int measSize = 4;
@@ -228,9 +234,9 @@ void BuoyTask::execute() {
 
     bool done = false;
     const int SIZEX = 320, SIZEY = 240;
-//    cv::namedWindow(RED, CV_WINDOW_NORMAL);
-//    cv::resizeWindow(RED, SIZEX, SIZEY+200);
-//    cv::moveWindow(RED, 1500, 400);
+    cv::namedWindow(RED, CV_WINDOW_NORMAL);
+    cv::resizeWindow(RED, SIZEX, SIZEY+200);
+    cv::moveWindow(RED, 1500, 400);
 //    cv::namedWindow(GRN, CV_WINDOW_NORMAL);
 //    cv::resizeWindow(GRN, SIZEX, SIZEY+200);
 //    cv::moveWindow(GRN, 1500, 100);
@@ -241,12 +247,12 @@ void BuoyTask::execute() {
     cv::resizeWindow("circles", SIZEX, SIZEY);
     cv::moveWindow("circles", 1100, 400);
 
-//    cvCreateTrackbar("LH", RED, &redHSV[0], 179);
-//    cvCreateTrackbar("HH", RED, &redHSV[1], 179);
-//    cvCreateTrackbar("LS", RED, &redHSV[2], 255);
-//    cvCreateTrackbar("HS", RED, &redHSV[3], 255);
-//    cvCreateTrackbar("LV", RED, &redHSV[4], 255);
-//    cvCreateTrackbar("HV", RED, &redHSV[5], 255);
+    cvCreateTrackbar("LH", RED, &redHSV[0], 179);
+    cvCreateTrackbar("HH", RED, &redHSV[1], 179);
+    cvCreateTrackbar("LS", RED, &redHSV[2], 255);
+    cvCreateTrackbar("HS", RED, &redHSV[3], 255);
+    cvCreateTrackbar("LV", RED, &redHSV[4], 255);
+    cvCreateTrackbar("HV", RED, &redHSV[5], 255);
 
 //    cvCreateTrackbar("LH", GRN, &greenHSV[0], 179);
 //    cvCreateTrackbar("HH", GRN, &greenHSV[1], 179);
@@ -256,6 +262,7 @@ void BuoyTask::execute() {
 //    cvCreateTrackbar("HV", GRN, &greenHSV[5], 255);
 
     while (!done) {
+
         double precTick = ticks;
         ticks = (double) cv::getTickCount();
 
@@ -282,7 +289,7 @@ void BuoyTask::execute() {
         if (!hitRed){
 //            printf("Doing red [%d] [%d] [%d] [%d] [%d] [%d]\n", redHSV[0], redHSV[1], redHSV[2], redHSV[3], redHSV[4], redHSV[5]);
             hsvFiltered = filterRed(frame);
-//            cv::imshow(RED, hsvFiltered);
+            cv::imshow(RED, hsvFiltered);
         } else if (!hitGreen){
             //not gonna do green
             done = true;
@@ -300,6 +307,7 @@ void BuoyTask::execute() {
         }
 
         if (alligned){
+//            continue;//REMOVE
             move(moveSpeed);
             sleep(moveTime);
             if (!hitRed){
@@ -314,6 +322,7 @@ void BuoyTask::execute() {
             }
             move(0);
         }else if (retreat){
+//            continue;//REMOVE
             if (moveWithSpeed){
                 println("Retreating");
                 move(-moveSpeed);
@@ -431,7 +440,7 @@ void BuoyTask::execute() {
             std::cout << "Measure matrix:" << std::endl << meas << std::endl;
 
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));
-
+//            cv::imshow("Center", frame);continue;
             if (std::abs(cent.x - imgWidth/2) < imgWidth/100*3){
                 //in the middle 20% of the screen horizontally
                 if (std::abs(cent.y - imgHeight / 2) < imgHeight / 100 * 3) {
@@ -496,6 +505,7 @@ void BuoyTask::execute() {
                 slide(deltaX);*/
             }
         } else {
+//            continue;//REMOVE
             ///CIRCLES NOT FOUND
 
             notFoundCount++;
@@ -561,13 +571,51 @@ void BuoyTask::execute() {
     move(0);
 }
 
-cv::Mat BuoyTask::filterRed(cv::Mat frame){
-    cv::Mat hsvFiltered = reds[0].filter(frame);
-    cv::Mat hsvFiltered2 = reds[1].filter(frame);
-//    cv::imshow(RED, hsvFiltered);
-    return hsvFiltered;
+
+std::string findColors(cv::Vec3b color){
+    //0 = b; 1 = g; 2 = r
+    int bg = color[0] - color[1];
+    int br = color[0] - color[2];
+    int gb = color[1] - color[0];
+    int gr = color[1] - color[2];
+    int rb = color[2] - color[0];
+    int rg = color[2] - color[1];
+    if (bg > 10 && br > 10)         return "Blue";
+    else if (gb > 10 && gr > 10)    return "Green";
+    else if (rb > 10 && rg > 10)    return "Red";
+    else                            return "idk, yellow?";
 }
 
-cv::Mat BuoyTask::findCircles(cv::Mat frame){
+cv::Mat BuoyTask::filterRed(cv::Mat frame){
+    std::vector<cv::Mat> filtered;
+    std::vector<float> sizes;
 
+    ShapeFilter tmpSf(3,1);
+
+    for (int i = 0; i < reds.size(); i++){
+        filtered.push_back(reds[i].filter(frame));
+        if (tmpSf.findCirc(filtered[i])){
+            bool added = false;
+            for (int n = 0; n < tmpSf.getRad().size(); n++){
+                if (findColors(tmpSf.colors[n]) == "Red"){
+//                    printf("COLOR: %d %d %d\n", tmpSf.colors[n][0], tmpSf.colors[n][1], tmpSf.colors[n][2]);
+                    sizes.push_back(tmpSf.getRad()[n]);
+                    added = true;
+                }
+            }
+            if (!added) sizes.push_back(0);
+        }else{
+            sizes.push_back(0);
+        }
+    }
+
+    int biggestRadIndex = 0;
+    for (int i = 0; i < sizes.size(); i++){
+        if (sizes[i] > sizes[biggestRadIndex]){
+            biggestRadIndex = i;
+        }
+    }
+
+
+    return filtered[biggestRadIndex];
 }

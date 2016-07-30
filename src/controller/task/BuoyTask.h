@@ -56,6 +56,5 @@ private:
     std::vector<HSVFilter> reds;
     cv::Mat filterRed(cv::Mat frame);
     void doGreen(cv::Mat frame);
-    cv::Mat findCircles(cv::Mat frame);
 };
 #endif // BUOYTASK_H

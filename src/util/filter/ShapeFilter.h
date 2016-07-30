@@ -94,6 +94,8 @@ public:
 
     std::vector<std::vector<cv::Point> > getContours();
 
+    std::vector<cv::Vec3b> colors;
+
 private:
     int shape;              //shape to look for
     unsigned int max;
@@ -114,6 +116,7 @@ private:
     void println(std::string s);
 
     bool findCircleExperimental(cv::Mat);
+    cv::Mat coloredImg;
 
 };
 

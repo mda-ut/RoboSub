@@ -63,7 +63,10 @@ std::vector<cv::Point2f> ShapeFilter::getCenter(){
 }
 
 bool ShapeFilter::findCirc(cv::Mat img){
-    if (shape == 3) return findCircleExperimental(img);
+    if (shape == 3) {
+        coloredImg = img.clone();
+        return findCircleExperimental(img);
+    }
     //getting the contours
     cv::Mat canny;
     std::vector<cv::Vec4i> hierarchy;
@@ -341,9 +344,11 @@ std::vector<cv::Point2f> ShapeFilter::findMassCenter(cv::Mat img){
     return result;
 }
 
+
+
 bool ShapeFilter::findCircleExperimental(cv::Mat img){
     cv::Mat canny_output;
-    std::vector<std::vector<cv::Point> > contours;
+//    std::vector<std::vector<cv::Point> > contours;
     std::vector<cv::Vec4i> hierarchy;
 
     // Detect edges and contours
@@ -382,31 +387,57 @@ bool ShapeFilter::findCircleExperimental(cv::Mat img){
         cv::circle( drawing, mc[i], 4, color, -1, 8, 0 );
     }
 
-    // Find largest mass
-    float maxmass = 0;
-    float rad = 0;
-    cv::Point2f masscenter(0, 0);
-    for ( int i = 0; i < contours.size(); i++)
-    {
-        float cur = cv::contourArea(contours[i]);
-            if ((maxmass < cur))
-            {
-                masscenter = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );;
-                maxmass = cur;
-                rad = pow(contourArea(contours[i])/M_PI,0.6);
-            }
-    }
-//    cout<<(std::to_string(maxmass) + " radius\n");
-//    cout<<("mass center: " + to_string(masscenter.x) + " " + to_string(masscenter.y)+"\n");
-    cv::circle( drawing, masscenter, 100, cv::Scalar(0,255,255), 5);
-
-    imshow("circles", drawing);
     center.clear();
     radius.clear();
-    if (rad != 0){
-        printf("rad [%f]\n", rad);
-    radius.push_back(rad);
-    center.push_back(masscenter);
+    colors.clear();
+
+    std::vector<cv::Point2f> sortedCent;
+    std::vector<float> sortedRad;
+
+    // Find largest mass
+    float rad = 0;
+    for ( int i = 0; i < contours.size(); i++)
+    {
+        cv::Point2f masscenter = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );
+        uint64 colors[3] = {0,0,0};
+        for (int n = 0; n < contours[i].size(); n++){
+            for (int c = 0; c < 3; c++){
+                colors[c] += coloredImg.at<cv::Vec3b>(contours[i][n])[c];
+            }
+        }
+        colors[0] = colors[0]/contours[i].size();
+        colors[1] = colors[1]/contours[i].size();
+        colors[2] = colors[2]/contours[i].size();
+
+        rad = pow(contourArea(contours[i])/M_PI,0.6);
+        if (sortedCent.size() == 0){
+            sortedCent.push_back(masscenter);
+            sortedRad.push_back(rad);
+            this->colors.push_back(cv::Vec3b(colors[0],colors[1],colors[2]));
+            continue;
+        }
+        std::vector<float>::iterator it = sortedRad.begin();
+        int n = 0;
+        while (it != sortedRad.end() && *it++ < rad){n++;}
+        sortedRad.insert(it, rad);
+        sortedCent.insert(sortedCent.begin()+n, masscenter);
+        this->colors.insert(this->colors.begin()+n, cv::Vec3b(colors[0],colors[1],colors[2]));
     }
+
+    for (int i = sortedRad.size()-1; i >= 0; i--){
+        center.push_back(sortedCent.at(i));
+        radius.push_back(sortedRad.at(i));
+    }
+
+//    cout<<(std::to_string(maxmass) + " radius\n");
+//    cout<<("mass center: " + to_string(masscenter.x) + " " + to_string(masscenter.y)+"\n");
+    cv::circle( drawing, center[0], 100, cv::Scalar(0,255,255), 5);
+
+    imshow("circles", drawing);
+//    if (rad != 0){
+//        printf("rad [%f]\n", rad);
+//        radius.push_back(rad);
+//        center.push_back(masscenter);
+//    }
     return rad > 0;
 }
