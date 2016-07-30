@@ -41,6 +41,7 @@ private:
     int rotateSpeed;
     int sinkHeight;
     int counter = 0;
+    double timeout = 120;
 
     void move(float d);
     void changeDepth(float h);
@@ -48,8 +49,6 @@ private:
     void slide(float d);
     float calcDistance(float rad);
 
-
-    int maxSavedReplays = 2;
     std::string foldername;
     Timer timer;
     HSVFilter green;

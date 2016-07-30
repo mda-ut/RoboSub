@@ -25,19 +25,14 @@ BuoyTask::BuoyTask(Model* camModel, TurnTask* tk, SpeedTask* st, DepthTask* dt)
     forwardBurstTime = std::stoi(settings->getProperty("forwardBurstTime"));
     stopBackSpeed= std::stoi(settings->getProperty("stopBackSpeed"));
     rotateSpeed= std::stoi(settings->getProperty("rotateSpeed"));
-    sinkHeight= std::stoi(settings->getProperty("sinkHeight"));
+    sinkHeight = std::stoi(settings->getProperty("sinkHeight"));
+    timeout = std::stod(settings->getProperty("timeout"));
 
-    if (access(("Buoy"+std::to_string(maxSavedReplays)).c_str(), F_OK) == 0){
-        system("rm Buoy* -r");
-    }
 
-    for (int i = 0; i <= maxSavedReplays; i++){
-        foldername = "Buoy" + std::to_string(i);
-        if (access(foldername.c_str(), F_OK) != 0){
-            system(("mkdir " + foldername).c_str());
-            break;
-        }
-    }
+    char buffer[80];
+    strftime(buffer, 80, "PATH%I:%M:%S", timer.getTimeStamp());
+    foldername = std::string(buffer);
+    system( ("mkdir "+foldername).c_str() );
 }
 BuoyTask::~BuoyTask(){
     delete logger;
@@ -73,7 +68,8 @@ void BuoyTask::changeDepth(float h){
     logger->info("Changing depth " + std::to_string(h));
     dt->setDepthDelta(h);
     dt->execute();
-//    usleep(5000000)    sleep(sinkTime);
+//    usleep(5000000)
+    sleep(sinkTime);
 }
 
 void BuoyTask::rotate(float angle){
@@ -133,9 +129,12 @@ float BuoyTask::calcDistance(float rad){
 void BuoyTask::execute() {
 
     if (std::stoi(settings->getProperty("YOLO")) == 1){
-        changeDepth(-300);
-        move(moveSpeed);
-        sleep(std::stoi(settings->getProperty("YOLOSPEED")));
+        changeDepth(std::stoi(settings->getProperty("YOLODEPTH")));
+        rotate(std::stoi(settings->getProperty("YOLOROT")));
+        move(std::stoi(settings->getProperty("YOLOSPEED")));
+        sleep(std::stoi(settings->getProperty("YOLOTIME")));
+        move(0);
+        return;
     }
 
     // >>>> Kalman Filter
@@ -261,7 +260,8 @@ void BuoyTask::execute() {
 //    cvCreateTrackbar("LV", GRN, &greenHSV[4], 255);
 //    cvCreateTrackbar("HV", GRN, &greenHSV[5], 255);
 
-    while (!done) {
+    timer.start();
+    while (!done && timer.getTimeElapsed() < timeout) {
 
         double precTick = ticks;
         ticks = (double) cv::getTickCount();
@@ -372,8 +372,8 @@ void BuoyTask::execute() {
             predRect.y = state.at<float>(1) - predRect.height / 2;
             cent.x = state.at<float>(0);
             cent.y = state.at<float>(1);
-            cv::circle(frame, cent, 2, CV_RGB(255,0,0), -1);
-            cv::rectangle(frame, predRect, CV_RGB(255,0,0), 2);
+            cv::circle(frame, cent, 2, CV_RGB(254,255,0), -1);
+            cv::rectangle(frame, predRect, CV_RGB(254,255,0), 2);
 
             // Update Kalman Filter
             notFoundCount = 0;
@@ -437,7 +437,7 @@ void BuoyTask::execute() {
             else
                kf.correct(meas); // Kalman Correction
 
-            std::cout << "Measure matrix:" << std::endl << meas << std::endl;
+//            std::cout << "Measure matrix:" << std::endl << meas << std::endl;
 
             cv::circle(frame, cent, 10, cv::Scalar(255,0,0));
 //            cv::imshow("Center", frame);continue;
@@ -574,19 +574,23 @@ void BuoyTask::execute() {
 
 std::string findColors(cv::Vec3b color){
     //0 = b; 1 = g; 2 = r
-    int bg = color[0] - color[1];
-    int br = color[0] - color[2];
-    int gb = color[1] - color[0];
-    int gr = color[1] - color[2];
-    int rb = color[2] - color[0];
-    int rg = color[2] - color[1];
-    if (bg > 10 && br > 10)         return "Blue";
-    else if (gb > 10 && gr > 10)    return "Green";
-    else if (rb > 10 && rg > 10)    return "Red";
-    else                            return "idk, yellow?";
+    int sum = color[0] + color[1] + color[2];
+    if (color[2] > sum/3)   return "Red";
+    else                    return "Nothing";
+//    int bg = color[0] - color[1];
+//    int br = color[0] - color[2];
+//    int gb = color[1] - color[0];
+//    int gr = color[1] - color[2];
+//    int rb = color[2] - color[0];
+//    int rg = color[2] - color[1];
+//    if (bg > 10 && br > 10)         return "Blue";
+//    else if (gb > 10 && gr > 10)    return "Green";
+//    else if (rb > 10 && rg > 10)    return "Red";
+//    else                            return "idk, yellow?";
 }
 
 cv::Mat BuoyTask::filterRed(cv::Mat frame){
+    return reds[0].filter(frame);
     std::vector<cv::Mat> filtered;
     std::vector<float> sizes;
 
